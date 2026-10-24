@@ -1,0 +1,54 @@
+# Pages CMS 관리자 화면 설정 (https://app.pagescms.org 에서 깃허브 로그인 후 이 저장소 선택)
+media:
+  input: images/products
+  output: images/products
+
+content:
+  - name: products
+    label: 상품 관리
+    type: file
+    path: data/products.json
+    fields:
+      - name: items
+        label: 상품 목록
+        type: object
+        list: true
+        fields:
+          - name: name
+            label: 상품명
+            type: string
+            required: true
+          - name: category
+            label: 카테고리
+            type: select
+            required: true
+            options:
+              values:
+                - value: planner
+                  label: 플래너
+                - value: writing
+                  label: 쓰기 노트
+                - value: canva
+                  label: 캔바 템플릿
+                - value: ppt
+                  label: PPT 서식
+                - value: sticker
+                  label: 스티커
+          - name: price
+            label: 가격 (예 9,900원)
+            type: string
+          - name: desc
+            label: 소개글 (1~2줄)
+            type: text
+          - name: image
+            label: 썸네일 이미지 (정사각, 500KB 이하)
+            type: image
+          - name: smartstore
+            label: 스마트스토어 마케팅 링크
+            type: string
+          - name: kmong
+            label: 크몽 상품 링크
+            type: string
+          - name: example
+            label: 예시 상품 표시
+            type: boolean

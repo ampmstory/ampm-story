@@ -1,0 +1,27 @@
+name: 블로그 최근 글 갱신
+
+on:
+  schedule:
+    - cron: "17 22 * * *"   # 매일 오전 7시 17분 (한국 시간)
+  workflow_dispatch:         # Actions 탭에서 직접 실행 가능
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: RSS 읽어서 posts.json 갱신
+        run: node scripts/update-posts.mjs
+      - name: 바뀐 내용 저장
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/posts.json
+          git diff --cached --quiet || git commit -m "블로그 최근 글 갱신"
+          git push

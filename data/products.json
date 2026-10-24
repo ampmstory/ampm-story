@@ -1,0 +1,54 @@
+{
+  "items": [
+    {
+      "name": "데일리 플래너",
+      "category": "planner",
+      "price": "0,000원",
+      "desc": "하루 일정과 할 일을 한 장에 정리하는 기본 플래너",
+      "image": "",
+      "smartstore": "#",
+      "kmong": "#",
+      "example": true
+    },
+    {
+      "name": "먼슬리 플래너",
+      "category": "planner",
+      "price": "0,000원",
+      "desc": "월간 일정과 목표를 한눈에 보는 플래너",
+      "image": "",
+      "smartstore": "#",
+      "kmong": "",
+      "example": true
+    },
+    {
+      "name": "한글 첫 쓰기 노트",
+      "category": "writing",
+      "price": "0,000원",
+      "desc": "덧쓰기·보고쓰기·외워쓰기 3단계 연습",
+      "image": "",
+      "smartstore": "#",
+      "kmong": "#",
+      "example": true
+    },
+    {
+      "name": "알파벳 첫 쓰기 노트",
+      "category": "writing",
+      "price": "0,000원",
+      "desc": "대소문자를 따라 쓰며 익히는 연습 노트",
+      "image": "",
+      "smartstore": "#",
+      "kmong": "",
+      "example": true
+    },
+    {
+      "name": "생활잡화 상세페이지",
+      "category": "canva",
+      "price": "0,000원",
+      "desc": "사진과 문구만 바꾸면 완성되는 캔바 템플릿",
+      "image": "",
+      "smartstore": "#",
+      "kmong": "#",
+      "example": true
+    }
+  ]
+}
