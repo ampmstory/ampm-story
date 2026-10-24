@@ -1,12 +1,12 @@
 {
   "items": [
     {
-      "name": "데일리 플래너",
+      "name": "굿노트 만년형 디지털 플래너 365 SEASONS 아이패드 다이어리 하이퍼링크 PDF 스티커 포함",
       "category": "planner",
-      "price": "0,000원",
-      "desc": "하루 일정과 할 일을 한 장에 정리하는 기본 플래너",
-      "image": "",
-      "smartstore": "#",
+      "price": "6000",
+      "desc": "✔ 월간·주간·데일리 계획을 한 파일에서 관리하고 싶은 분\n✔ 굿노트에서 사용할 투명 PNG 스티커가 필요한 분",
+      "image": "images/products/스크린샷 2026-10-24 오전 11.35.46.png",
+      "smartstore": "https://naver.me/F2Lk3d5T",
       "kmong": "#",
       "example": true
     },
@@ -15,9 +15,7 @@
       "category": "planner",
       "price": "0,000원",
       "desc": "월간 일정과 목표를 한눈에 보는 플래너",
-      "image": "",
       "smartstore": "#",
-      "kmong": "",
       "example": true
     },
     {
@@ -25,7 +23,6 @@
       "category": "writing",
       "price": "0,000원",
       "desc": "덧쓰기·보고쓰기·외워쓰기 3단계 연습",
-      "image": "",
       "smartstore": "#",
       "kmong": "#",
       "example": true
@@ -35,9 +32,7 @@
       "category": "writing",
       "price": "0,000원",
       "desc": "대소문자를 따라 쓰며 익히는 연습 노트",
-      "image": "",
       "smartstore": "#",
-      "kmong": "",
       "example": true
     },
     {
@@ -45,7 +40,6 @@
       "category": "canva",
       "price": "0,000원",
       "desc": "사진과 문구만 바꾸면 완성되는 캔바 템플릿",
-      "image": "",
       "smartstore": "#",
       "kmong": "#",
       "example": true
