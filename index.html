@@ -100,8 +100,8 @@ section{padding-block:64px}
 .card .ph{aspect-ratio:1;border-radius:0;border:none;border-bottom:1px dashed var(--line);background:var(--tint);color:var(--muted)}
 .card .body{padding:14px;display:flex;flex-direction:column;gap:4px;flex:1}
 .card .cat-name{font-size:12px;color:var(--accent)}
-.card h3{font-family:var(--sans);font-size:15px;font-weight:500}
-.card p{font-size:13px;color:var(--muted);margin:0;flex:1}
+.card h3{font-family:var(--sans);font-size:15px;font-weight:500;line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.card p{font-size:13px;color:var(--muted);margin:0;flex:1;white-space:pre-line;line-height:1.6}
 .card .price{font-weight:700;font-size:15px;font-variant-numeric:tabular-nums;margin-top:6px}
 .card .buy{display:flex;gap:6px;margin-top:10px}
 .card .buy a{flex:1;text-align:center;font-size:12px;padding:8px 0;border-radius:6px;border:1px solid var(--accent);color:var(--accent);font-weight:500}
@@ -230,6 +230,8 @@ const CATEGORIES = [
 const BLOG = "https://blog.naver.com/ampmstory365";
 let PRODUCTS = [];
 let POSTS = [];
+const link = u => (u && u.trim() && u.trim() !== "#") ? u.trim() : "";
+const won = v => { const t = String(v ?? "").trim(); return /^[\d,]+$/.test(t) ? Number(t.replace(/,/g, "")).toLocaleString("ko-KR") + "원" : t; };
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 async function loadJSON(path){
   try { const r = await fetch(path, {cache:"no-store"}); if (!r.ok) throw 0; return await r.json(); }
@@ -268,10 +270,10 @@ function renderGrid(){
       ${p.example ? '<span class="ex">예시 상품</span>' : ''}
       <span class="cat-name">${catName(p.category)}</span>
       <h3>${esc(p.name)}</h3><p>${esc(p.desc)}</p>
-      <div class="price">${esc(p.price)}</div>
+      <div class="price">${esc(won(p.price))}</div>
       <div class="buy">
-        ${p.smartstore ? `<a href="${esc(p.smartstore)}" target="_blank" rel="noopener">스마트스토어</a>` : ''}
-        ${p.kmong ? `<a href="${esc(p.kmong)}" target="_blank" rel="noopener">크몽</a>` : ''}
+        ${link(p.smartstore) ? `<a href="${esc(link(p.smartstore))}" target="_blank" rel="noopener">스마트스토어</a>` : ''}
+        ${link(p.kmong) ? `<a href="${esc(link(p.kmong))}" target="_blank" rel="noopener">크몽</a>` : ''}
       </div>
     </div></article>`).join("");
 }
@@ -283,7 +285,7 @@ function renderPosts(){
     return;
   }
   box.innerHTML = POSTS.slice(0,3).map(p => `<a class="post" href="${esc(p.link || BLOG)}" target="_blank" rel="noopener">
-    ${p.thumb ? `<img src="${esc(p.thumb)}" alt="" loading="lazy" referrerpolicy="no-referrer">` : '<span class="ph">AMPM<br>Story</span>'}
+    ${p.thumb ? `<img src="${esc(p.thumb)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'ph',innerHTML:'AMPM<br>Story'}))">` : '<span class="ph">AMPM<br>Story</span>'}
     <div class="t"><time>${esc(p.date)}</time><h3>${esc(p.title)}</h3><span>읽어보기 →</span></div></a>`).join("");
 }
 function select(id, scroll){
