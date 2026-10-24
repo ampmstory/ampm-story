@@ -30,10 +30,11 @@
       "example": true
     },
     {
-      "name": "알파벳 첫 쓰기 노트",
-      "category": "writing",
-      "price": "0,000원",
-      "desc": "대소문자를 따라 쓰며 익히는 연습 노트",
+      "name": "퀵노트 BASIC 굿노트 메모 정리 템플릿",
+      "category": "planner",
+      "price": "6,900원",
+      "desc": "흩어진 생각·메모·통화 내용을 한 권에 모아, 필요할 때 다시 찾아봐요.\n적어둔 내용을 다음 행동과 기한으로 정리해, 실행까지 이어가요.",
+      "image": "images/products/AMPM_QuickNote_Product_1000x1000.png",
       "smartstore": "#",
       "example": true
     },
