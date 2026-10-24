@@ -11,11 +11,12 @@
       "example": false
     },
     {
-      "name": "먼슬리 플래너",
+      "name": "굿노트 회의록 미팅노트 통화기록 업무노트 말랑사원 디지털파일",
       "category": "planner",
-      "price": "0,000원",
-      "desc": "월간 일정과 목표를 한눈에 보는 플래너",
-      "smartstore": "#",
+      "price": "6,900원",
+      "desc": "한눈에 보고, 필요한 기록으로 바로 이동해요.\n회의가 많아져도 찾는건 빠르게",
+      "image": "images/products/malang.jpg",
+      "smartstore": "https://naver.me/xeFRtxJm",
       "example": true
     },
     {
