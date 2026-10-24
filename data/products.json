@@ -37,15 +37,6 @@
       "image": "images/products/AMPM_QuickNote_Product_1000x1000.png",
       "smartstore": "https://smartstore.naver.com/ampmstory/products/13803678150",
       "example": true
-    },
-    {
-      "name": "생활잡화 상세페이지",
-      "category": "canva",
-      "price": "0,000원",
-      "desc": "사진과 문구만 바꾸면 완성되는 캔바 템플릿",
-      "smartstore": "#",
-      "kmong": "#",
-      "example": true
     }
   ]
 }
