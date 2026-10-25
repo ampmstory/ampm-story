@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>일본어 회화 발음 듣기</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;800&family=Noto+Sans+JP:wght@500;700&display=swap">
+<style>
+/* Layout: 플래너 회화 부록과 같은 초록·분홍 톤. 상단 부록 탭 → 표현 카드 → 대화 박스, 아래 고정 재생 상태바 */
+:root {
+  --bg: #FBFCF9; --surface: #FFFFFF; --tint: #EEF6EC; --line: #CFE3CC; --pinkt: #FDF1F3;
+  --green: #6FAE7B; --green-d: #3F7A4B; --pink: #E57F91; --pink-d: #B9465C;
+  --fg: #3B3A37; --sub: #737A72; --on-accent: #FFFFFF;
+  --f-ko: "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  --f-ja: "Noto Sans JP", "Hiragino Sans", "Yu Gothic", sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #181C18; --surface: #222822; --tint: #26332A; --line: #3A4A3D; --pinkt: #33282C;
+  --green: #85C391; --green-d: #A8D9B1; --pink: #EE93A3; --pink-d: #F4A9B6;
+  --fg: #EEF2EC; --sub: #AEB8AC; --on-accent: #181C18; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #181C18; --surface: #222822; --tint: #26332A; --line: #3A4A3D; --pinkt: #33282C;
+  --green: #85C391; --green-d: #A8D9B1; --pink: #EE93A3; --pink-d: #F4A9B6;
+  --fg: #EEF2EC; --sub: #AEB8AC; --on-accent: #181C18; color-scheme: dark }
+* { box-sizing: border-box }
+body { background: var(--bg); color: var(--fg); font-family: var(--f-ko); font-size: 15px; line-height: 1.55;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 0 96px }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg) }
+.wrap { max-width: 860px; margin: 0 auto }
+header.top { padding-block: 22px 8px; display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: end; justify-content: space-between }
+.brand small { display: block; font-size: 12px; letter-spacing: .06em; color: var(--green-d); font-weight: 600 }
+.brand h1 { margin: 2px 0 0; font-size: 23px; font-weight: 800; text-wrap: balance }
+.speed { display: flex; gap: 6px; align-items: center; font-size: 13px; color: var(--sub) }
+.seg { display: inline-flex; background: var(--tint); border-radius: 999px; padding: 3px }
+.seg button { border: 0; background: transparent; color: var(--sub); font: 600 13px var(--f-ko); padding: 6px 12px; border-radius: 999px; cursor: pointer }
+.seg button[aria-pressed="true"] { background: var(--surface); color: var(--green-d); box-shadow: 0 1px 3px rgba(0,0,0,.08) }
+nav.tabs { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); padding-block: 8px; display: flex; gap: 6px; overflow-x: auto; scrollbar-width: thin }
+nav.tabs a { flex: 0 0 auto; text-decoration: none; color: var(--green-d); background: var(--tint); border: 1px solid var(--line);
+  padding: 7px 12px; border-radius: 12px; font-weight: 600; font-size: 13.5px; white-space: nowrap }
+nav.tabs a .n { font-size: 11px; opacity: .8; margin-right: 5px; font-variant-numeric: tabular-nums }
+nav.tabs a[aria-current="page"] { background: var(--green); color: var(--on-accent); border-color: var(--green) }
+.notice { margin: 8px 0 2px; padding: 11px 14px; border-radius: 12px; background: var(--pinkt); font-size: 13.5px }
+.notice b { color: var(--pink-d) }
+h2 { font-size: 19px; margin: 16px 0 10px; display: flex; gap: 8px; align-items: center; text-wrap: balance }
+h2 .pill { font-size: 12px; background: var(--green); color: var(--on-accent); padding: 2px 10px; border-radius: 999px; flex: 0 0 auto }
+.stack { display: grid; gap: 10px }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 14px 16px; display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center }
+.card .num { width: 26px; height: 26px; border-radius: 50%; background: var(--pink); color: var(--on-accent); display: grid; place-items: center; font-size: 13px; font-weight: 800; flex: 0 0 auto }
+.card .body { flex: 1 1 260px; min-width: 0 }
+.jp { font-family: var(--f-ja); font-size: 22px; font-weight: 700; line-height: 1.35 }
+.yomi { font-family: var(--f-ja); font-size: 14px; color: var(--sub) }
+.rom { font-size: 13.5px; color: var(--sub) }
+.rom b { color: var(--fg); font-weight: 600 }
+.mean { font-size: 14px; color: var(--pink-d); font-weight: 700 }
+.btns { display: flex; gap: 6px; flex: 0 0 auto }
+.play { display: inline-flex; align-items: center; justify-content: center; gap: 6px; border: 0; border-radius: 12px; padding: 10px 14px;
+  background: var(--green); color: var(--on-accent); font: 700 14px var(--f-ko); cursor: pointer; min-height: 44px }
+.play.ghost { background: var(--tint); color: var(--green-d) }
+.play.on { box-shadow: 0 0 0 3px var(--pink) }
+.play:focus-visible, nav.tabs a:focus-visible, .seg button:focus-visible { outline: 3px solid var(--pink); outline-offset: 2px }
+.times { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 8px }
+.times div { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px }
+.times b { color: var(--pink-d) } .times small { color: var(--sub); display: block; font-size: 12.5px }
+.talk { background: var(--tint); border-radius: 16px; padding: 14px 16px; display: grid; gap: 10px }
+.talk .head { display: flex; flex-wrap: wrap; gap: 8px; justify-content: space-between; align-items: center }
+.talk h3 { margin: 0; font-size: 15px; color: var(--green-d) }
+.line { display: flex; gap: 10px; align-items: flex-start }
+.sp { flex: 0 0 auto; font-size: 12px; font-weight: 700; color: var(--green-d); background: var(--surface); border-radius: 999px; padding: 3px 10px; margin-top: 4px }
+.line .jp { font-size: 18px }
+.line.on .jp { color: var(--pink-d) }
+.tip { font-size: 13.5px } .tip b { color: var(--pink-d); margin-right: 6px }
+.status { position: fixed; left: 0; right: 0; bottom: 0; z-index: 6; background: var(--surface); border-top: 1px solid var(--line);
+  padding: 10px max(16px, env(safe-area-inset-right, 0px)) calc(10px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); font-size: 13px; color: var(--sub) }
+.status .in { max-width: 860px; margin: 0 auto; display: flex; gap: 8px 14px; flex-wrap: wrap; align-items: center }
+.status b { color: var(--fg); font-family: var(--f-ja) }
+.status select { font: 13px var(--f-ko); padding: 4px 6px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--fg); max-width: 220px }
+footer.src { margin-top: 18px; font-size: 12px; color: var(--sub) }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important } }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand"><small>14일 완성 일본어 쓰기 플래너 · 여행 기초회화 부록</small><h1>회화 발음 듣기</h1></div>
+    <div class="speed">속도
+      <div class="seg" role="group" aria-label="재생 속도">
+        <button type="button" id="sp-normal" data-rate="0.9" aria-pressed="true">보통</button>
+        <button type="button" id="sp-slow" data-rate="0.6" aria-pressed="false">느리게</button>
+      </div>
+    </div>
+  </header>
+  <nav class="tabs" id="tabs" aria-label="부록 페이지"></nav>
+  <div class="notice" id="voice-note">노트의 부록 번호와 같은 탭이에요. 들은 뒤 소리 내어 따라 읽고, 노트에 써 보세요.</div>
+  <main id="panel"></main>
+  <footer class="src">기기에 들어 있는 일본어 음성으로 읽어 줘요. 한글 발음은 참고용이고, 기기마다 목소리가 조금 다를 수 있어요.<br><a href="https://ampmstory.com/" style="color:inherit">AMPM STORY</a></footer>
+</div>
+
+<div class="status" role="status">
+  <div class="in"><span id="st-msg">재생 준비 완료</span><span>음성: <select id="voice" aria-label="일본어 음성 선택"></select></span></div>
+</div>
+
+<script>
+const DATA = [{"no": 1, "title": "아침 · 낮 · 저녁 인사", "expr": [{"jp": "おはようございます。", "yomi": null, "rom": "ohayō gozaimasu", "ko": "오하요- 고자이마스", "mean": "안녕하세요 (아침 인사)"}, {"jp": "こんにちは。", "yomi": null, "rom": "konnichiwa", "ko": "곤니치와", "mean": "안녕하세요 (낮 인사)"}, {"jp": "こんばんは。", "yomi": null, "rom": "konbanwa", "ko": "곰방와", "mean": "안녕하세요 (저녁 인사)"}], "talk": [{"sp": "나", "jp": "こんばんは。", "rom": "konbanwa", "mean": "안녕하세요. (저녁)"}, {"sp": "상대", "jp": "こんばんは。", "rom": "konbanwa", "mean": "안녕하세요."}], "tip": ["친한 사이에는 おはよう(오하요-)처럼 짧게 말하기도 해요.", "밤에 헤어지거나 잘 때는 おやすみなさい(오야스미나사이)라고 해요."], "times": [["아침", "대략 오전 10시쯤까지", "おはようございます"], ["낮", "점심 무렵 ~ 해 질 녘", "こんにちは"], ["저녁 · 밤", "해가 진 뒤", "こんばんは"]]}, {"no": 2, "title": "감사와 사과", "expr": [{"jp": "ありがとうございます。", "yomi": null, "rom": "arigatō gozaimasu", "ko": "아리가토- 고자이마스", "mean": "감사합니다"}, {"jp": "いいえ、どういたしまして。", "yomi": null, "rom": "iie, dō itashimashite", "ko": "이-에, 도-이타시마시테", "mean": "아니에요, 천만에요"}, {"jp": "ごめんなさい。", "yomi": null, "rom": "gomen nasai", "ko": "고멘나사이", "mean": "미안해요"}], "talk": [{"sp": "나", "jp": "ありがとうございます。", "rom": "arigatō gozaimasu", "mean": "감사합니다."}, {"sp": "상대", "jp": "いいえ、どういたしまして。", "rom": "iie, dō itashimashite", "mean": "아니에요, 천만에요."}], "tip": ["가게나 길에서 가볍게 사과하거나 말을 걸 때는 すみません을 더 많이 써요. (부록 07)"], "times": null}, {"no": 3, "title": "간단한 자기소개", "expr": [{"jp": "はじめまして。", "yomi": null, "rom": "hajimemashite", "ko": "하지메마시테", "mean": "처음 뵙겠습니다"}, {"jp": "わたしはキムです。", "yomi": null, "rom": "watashi wa Kimu desu", "ko": "와타시와 키무데스", "mean": "저는 김입니다"}, {"jp": "どちらからですか。", "yomi": null, "rom": "dochira kara desu ka", "ko": "도치라카라 데스카", "mean": "어디에서 오셨어요?"}, {"jp": "韓国から来ました。", "yomi": "かんこくからきました。", "rom": "kankoku kara kimashita", "ko": "캉코쿠카라 키마시타", "mean": "한국에서 왔어요"}], "talk": [{"sp": "상대", "jp": "どちらからですか。", "rom": "dochira kara desu ka", "mean": "어디에서 오셨어요?"}, {"sp": "나", "jp": "韓国から来ました。", "rom": "kankoku kara kimashita", "mean": "한국에서 왔어요."}], "tip": ["キム 자리에 내 이름을 넣어요. 외국 이름은 가타카나로 써요. (김 キム · 이 イ · 박 パク)"], "times": null}, {"no": 4, "title": "쇼핑과 가격 묻기", "expr": [{"jp": "これはいくらですか。", "yomi": null, "rom": "kore wa ikura desu ka", "ko": "코레와 이쿠라데스카", "mean": "이거 얼마예요?"}, {"jp": "500円です。", "yomi": "ごひゃくえんです。", "rom": "gohyaku en desu", "ko": "고햐쿠엔데스", "mean": "500엔이에요"}, {"jp": "これをください。", "yomi": null, "rom": "kore o kudasai", "ko": "코레오 쿠다사이", "mean": "이거 주세요"}], "talk": [{"sp": "나", "jp": "これはいくらですか。", "rom": "kore wa ikura desu ka", "mean": "이거 얼마예요?"}, {"sp": "점원", "jp": "500円です。", "rom": "gohyaku en desu", "mean": "500엔이에요."}], "tip": [], "times": null}, {"no": 5, "title": "식당 주문", "expr": [{"jp": "メニューをください。", "yomi": null, "rom": "menyū o kudasai", "ko": "메뉴-오 쿠다사이", "mean": "메뉴판 주세요"}, {"jp": "おすすめは何ですか。", "yomi": "おすすめはなんですか。", "rom": "osusume wa nan desu ka", "ko": "오스스메와 난데스카", "mean": "추천 메뉴는 뭐예요?"}, {"jp": "これを一つください。", "yomi": "これをひとつください。", "rom": "kore o hitotsu kudasai", "ko": "코레오 히토츠 쿠다사이", "mean": "이거 하나 주세요"}], "talk": [{"sp": "나", "jp": "おすすめは何ですか。", "rom": "osusume wa nan desu ka", "mean": "추천 메뉴는 뭐예요?"}, {"sp": "점원", "jp": "これです。", "rom": "kore desu", "mean": "이거예요."}], "tip": [], "times": null}, {"no": 6, "title": "계산과 결제", "expr": [{"jp": "お会計をお願いします。", "yomi": "おかいけいをおねがいします。", "rom": "okaikei o onegai shimasu", "ko": "오카이케-오 오네가이시마스", "mean": "계산해 주세요"}, {"jp": "カードでいいですか。", "yomi": null, "rom": "kādo de ii desu ka", "ko": "카-도데 이-데스카", "mean": "카드로 해도 돼요?"}, {"jp": "現金でお願いします。", "yomi": "げんきんでおねがいします。", "rom": "genkin de onegai shimasu", "ko": "겡킨데 오네가이시마스", "mean": "현금으로 할게요"}], "talk": [{"sp": "나", "jp": "カードでいいですか。", "rom": "kādo de ii desu ka", "mean": "카드로 해도 돼요?"}, {"sp": "점원", "jp": "はい、だいじょうぶです。", "rom": "hai, daijōbu desu", "mean": "네, 괜찮아요."}], "tip": [], "times": null}, {"no": 7, "title": "위치 묻기", "expr": [{"jp": "すみません。", "yomi": null, "rom": "sumimasen", "ko": "스미마센", "mean": "실례합니다 (말을 걸 때)"}, {"jp": "トイレはどこですか。", "yomi": null, "rom": "toire wa doko desu ka", "ko": "토이레와 도코데스카", "mean": "화장실은 어디예요?"}, {"jp": "駅はどこですか。", "yomi": "えきはどこですか。", "rom": "eki wa doko desu ka", "ko": "에키와 도코데스카", "mean": "역은 어디예요?"}, {"jp": "あそこです。", "yomi": null, "rom": "asoko desu", "ko": "아소코데스", "mean": "저기예요"}], "talk": [{"sp": "나", "jp": "すみません、トイレはどこですか。", "rom": "sumimasen, toire wa doko desu ka", "mean": "실례합니다, 화장실은 어디예요?"}, {"sp": "상대", "jp": "あそこです。", "rom": "asoko desu", "mean": "저기예요."}], "tip": [], "times": null}, {"no": 8, "title": "택시 · 교통", "expr": [{"jp": "駅までお願いします。", "yomi": "えきまでおねがいします。", "rom": "eki made onegai shimasu", "ko": "에키마데 오네가이시마스", "mean": "역까지 가 주세요"}, {"jp": "どのくらいかかりますか。", "yomi": null, "rom": "dono kurai kakarimasu ka", "ko": "도노쿠라이 카카리마스카", "mean": "얼마나 걸려요?"}, {"jp": "ここで止めてください。", "yomi": "ここでとめてください。", "rom": "koko de tomete kudasai", "ko": "코코데 토메테 쿠다사이", "mean": "여기서 세워 주세요"}], "talk": [{"sp": "나", "jp": "どのくらいかかりますか。", "rom": "dono kurai kakarimasu ka", "mean": "얼마나 걸려요?"}, {"sp": "기사", "jp": "10分ぐらいです。", "rom": "juppun gurai desu", "mean": "10분 정도예요."}], "tip": [], "times": null}, {"no": 9, "title": "호텔 체크인", "expr": [{"jp": "チェックインをお願いします。", "yomi": "チェックインをおねがいします。", "rom": "chekkuin o onegai shimasu", "ko": "첵쿠잉오 오네가이시마스", "mean": "체크인 부탁해요"}, {"jp": "予約しています。", "yomi": "よやくしています。", "rom": "yoyaku shite imasu", "ko": "요야쿠 시테이마스", "mean": "예약했어요"}, {"jp": "朝ごはんは何時ですか。", "yomi": "あさごはんはなんじですか。", "rom": "asagohan wa nanji desu ka", "ko": "아사고항와 난지데스카", "mean": "조식은 몇 시예요?"}], "talk": [{"sp": "나", "jp": "予約しています。", "rom": "yoyaku shite imasu", "mean": "예약했어요."}, {"sp": "직원", "jp": "お名前をお願いします。", "rom": "onamae o onegai shimasu", "mean": "성함을 알려 주세요."}], "tip": [], "times": null}, {"no": 10, "title": "사진 부탁하기", "expr": [{"jp": "写真を撮ってくれませんか。", "yomi": "しゃしんをとってくれませんか。", "rom": "shashin o totte kuremasen ka", "ko": "샤싱오 톳테 쿠레마센카", "mean": "사진 좀 찍어 주시겠어요?"}, {"jp": "ここを押してください。", "yomi": "ここをおしてください。", "rom": "koko o oshite kudasai", "ko": "코코오 오시테 쿠다사이", "mean": "여기를 눌러 주세요"}, {"jp": "撮りましょうか。", "yomi": "とりましょうか。", "rom": "torimashō ka", "ko": "토리마쇼-카", "mean": "(제가) 찍어 드릴까요?"}], "talk": [{"sp": "나", "jp": "写真を撮ってくれませんか。", "rom": "shashin o totte kuremasen ka", "mean": "사진 좀 찍어 주시겠어요?"}, {"sp": "상대", "jp": "はい、いいですよ。", "rom": "hai, ii desu yo", "mean": "네, 좋아요."}], "tip": ["사진을 찍어도 되는지 물을 때는 写真を撮ってもいいですか。라고 해요."], "times": null}, {"no": 11, "title": "몸이 안 좋을 때", "expr": [{"jp": "気分が悪いです。", "yomi": "きぶんがわるいです。", "rom": "kibun ga warui desu", "ko": "키붕가 와루이데스", "mean": "몸이 안 좋아요"}, {"jp": "薬局はどこですか。", "yomi": "やっきょくはどこですか。", "rom": "yakkyoku wa doko desu ka", "ko": "약쿄쿠와 도코데스카", "mean": "약국은 어디예요?"}, {"jp": "助けてください。", "yomi": "たすけてください。", "rom": "tasukete kudasai", "ko": "타스케테 쿠다사이", "mean": "도와주세요"}], "talk": [{"sp": "상대", "jp": "大丈夫ですか。", "rom": "daijōbu desu ka", "mean": "괜찮으세요?"}, {"sp": "나", "jp": "気分が悪いです。", "rom": "kibun ga warui desu", "mean": "몸이 안 좋아요."}], "tip": ["일본의 긴급 전화: 119 (구급차 · 소방), 110 (경찰)"], "times": null}, {"no": 12, "title": "도움 요청", "expr": [{"jp": "もう一度お願いします。", "yomi": "もういちどおねがいします。", "rom": "mō ichido onegai shimasu", "ko": "모- 이치도 오네가이시마스", "mean": "한 번 더 말씀해 주세요"}, {"jp": "ゆっくりお願いします。", "yomi": "ゆっくりおねがいします。", "rom": "yukkuri onegai shimasu", "ko": "육쿠리 오네가이시마스", "mean": "천천히 말씀해 주세요"}, {"jp": "わかりません。", "yomi": null, "rom": "wakarimasen", "ko": "와카리마센", "mean": "잘 모르겠어요 (이해하지 못했어요)"}], "talk": [{"sp": "상대", "jp": "わかりますか。", "rom": "wakarimasu ka", "mean": "이해되세요?"}, {"sp": "나", "jp": "すみません、わかりません。", "rom": "sumimasen, wakarimasen", "mean": "죄송해요, 모르겠어요."}, {"sp": "나", "jp": "ゆっくりお願いします。", "rom": "yukkuri onegai shimasu", "mean": "천천히 말씀해 주세요."}], "tip": [], "times": null}, {"no": 13, "title": "짧은 대화 복습", "expr": [], "talk": [], "tip": [], "times": null, "reviews": [{"title": "가게에서", "talk": [{"sp": "나", "jp": "すみません、これはいくらですか。", "rom": "sumimasen, kore wa ikura desu ka", "mean": "실례합니다, 이거 얼마예요?"}, {"sp": "점원", "jp": "500円です。", "rom": "gohyaku en desu", "mean": "500엔이에요."}, {"sp": "나", "jp": "これをください。カードでいいですか。", "rom": "kore o kudasai. kādo de ii desu ka", "mean": "이거 주세요. 카드로 해도 돼요?"}, {"sp": "점원", "jp": "はい、だいじょうぶです。", "rom": "hai, daijōbu desu", "mean": "네, 괜찮아요."}, {"sp": "나", "jp": "ありがとうございます。", "rom": "arigatō gozaimasu", "mean": "감사합니다."}]}, {"title": "길에서", "talk": [{"sp": "나", "jp": "すみません、駅はどこですか。", "rom": "sumimasen, eki wa doko desu ka", "mean": "실례합니다, 역은 어디예요?"}, {"sp": "상대", "jp": "あそこです。", "rom": "asoko desu", "mean": "저기예요."}, {"sp": "나", "jp": "ありがとうございます。", "rom": "arigatō gozaimasu", "mean": "감사합니다."}]}]}];
+(function () {
+  const $ = s => document.querySelector(s);
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const synth = window.speechSynthesis;
+  let rate = 0.9, voices = [], voice = null;
+  const id = n => "a" + String(n).padStart(2, "0");
+
+  $("#tabs").innerHTML = DATA.map(p => `<a href="#${id(p.no)}" data-tab="${id(p.no)}"><span class="n">${String(p.no).padStart(2, "0")}</span>${esc(p.title)}</a>`).join("");
+
+  function talkBox(title, lines, key) {
+    return `<div class="talk"><div class="head"><h3>${esc(title)}</h3>
+      <button class="play" type="button" data-talk="${key}">▶ 대화 이어 듣기</button></div>
+      ${lines.map((t, i) => `<div class="line" data-line="${key}-${i}"><span class="sp">${esc(t.sp)}</span>
+        <div style="min-width:0;flex:1"><div class="jp" lang="ja">${esc(t.jp)}</div><div class="rom">${esc(t.rom)} · <b>${esc(t.mean)}</b></div></div>
+        <button class="play ghost" type="button" data-say="${esc(t.jp)}" aria-label="${esc(t.mean)} 듣기">▶</button></div>`).join("")}</div>`;
+  }
+  const TALKS = {};
+  function render(p) {
+    let h = `<h2><span class="pill">부록 ${String(p.no).padStart(2, "0")}</span>${esc(p.title)}</h2>`;
+    if (p.expr.length) h += `<div class="stack">` + p.expr.map((e, i) => `
+      <div class="card"><span class="num">${i + 1}</span>
+        <div class="body"><div class="jp" lang="ja">${esc(e.jp)}</div>
+          ${e.yomi ? `<div class="yomi" lang="ja">읽는 법 ${esc(e.yomi)}</div>` : ""}
+          <div class="rom">${esc(e.rom)} · 한글 참고 <b>${esc(e.ko)}</b></div>
+          <div class="mean">${esc(e.mean)}</div></div>
+        <div class="btns"><button class="play" type="button" data-say="${esc(e.jp)}">▶ 듣기</button>
+          <button class="play ghost" type="button" data-say="${esc(e.jp)}" data-rate="0.55">느리게</button></div></div>`).join("") + `</div>`;
+    if (p.times) h += `<h2 style="font-size:16px">언제 쓸까?</h2><div class="times">` + p.times.map(t =>
+      `<div><b>${esc(t[0])}</b> <small>${esc(t[1])}</small><span class="jp" lang="ja" style="font-size:17px">${esc(t[2])}</span></div>`).join("") + `</div>`;
+    if (p.talk.length) { TALKS[id(p.no)] = p.talk; h += `<h2 style="font-size:16px">짧은 대화</h2>` + talkBox("말하며 읽어 보는 대화", p.talk, id(p.no)); }
+    (p.reviews || []).forEach((r, k) => { const key = id(p.no) + "r" + k; TALKS[key] = r.talk; h += `<h2 style="font-size:16px">대화 · ${esc(r.title)}</h2>` + talkBox("처음부터 끝까지 이어 들어 보세요", r.talk, key); });
+    if (p.tip.length) h += `<div class="stack" style="margin-top:10px">` + p.tip.map(t => `<div class="tip"><b>TIP</b>${esc(t)}</div>`).join("") + `</div>`;
+    $("#panel").innerHTML = h;
+  }
+
+  function loadVoices() {
+    if (!synth) return;
+    voices = synth.getVoices().filter(v => /^ja/i.test(v.lang));
+    const sel = $("#voice");
+    sel.innerHTML = voices.length ? voices.map((v, i) => `<option value="${i}">${esc(v.name)}</option>`).join("") : `<option>기본 음성</option>`;
+    voice = voices[0] || null;
+    if (!voices.length) $("#voice-note").innerHTML = "<b>이 기기에서 일본어 음성을 찾지 못했어요.</b> 아이폰·아이패드는 설정 → 손쉬운 사용 → 읽기 및 말하기 → 음성에서 일본어 음성을 추가할 수 있어요.";
+  }
+  if (synth) { loadVoices(); synth.onvoiceschanged = loadVoices; }
+  else $("#voice-note").innerHTML = "<b>이 브라우저는 음성 재생을 지원하지 않아요.</b> Safari나 Chrome 최신 버전에서 열어 주세요.";
+  $("#voice").addEventListener("change", e => { voice = voices[+e.target.value] || null; });
+
+  let onBtn = null;
+  function clearOn() { if (onBtn) onBtn.classList.remove("on"); document.querySelectorAll(".line.on").forEach(l => l.classList.remove("on")); }
+  function speak(items, btn) {
+    if (!synth) return;
+    synth.cancel(); clearOn(); onBtn = btn; if (btn) btn.classList.add("on");
+    items.forEach((it, i) => {
+      const u = new SpeechSynthesisUtterance(it.text);
+      u.lang = "ja-JP"; u.rate = it.rate || rate; if (it.voice || voice) u.voice = it.voice || voice; if (it.pitch) u.pitch = it.pitch;
+      u.onstart = () => { $("#st-msg").innerHTML = `재생 중 <b>${esc(it.text)}</b>`; document.querySelectorAll(".line.on").forEach(l => l.classList.remove("on")); if (it.line) document.querySelector(`[data-line="${it.line}"]`)?.classList.add("on"); };
+      u.onend = () => { if (i === items.length - 1) { clearOn(); $("#st-msg").textContent = "재생 끝 · 소리 내어 따라 읽어 보세요"; } };
+      u.onerror = () => { clearOn(); $("#st-msg").textContent = "재생하지 못했어요. 화면을 한 번 누른 뒤 다시 시도해 보세요."; };
+      synth.speak(u);
+    });
+  }
+  document.addEventListener("click", e => {
+    const b = e.target.closest("[data-say],[data-talk]");
+    if (!b) return;
+    if (b.dataset.say) return speak([{ text: b.dataset.say, rate: b.dataset.rate ? +b.dataset.rate : null }], b);
+    const lines = TALKS[b.dataset.talk] || [];
+    const roles = [...new Set(lines.map(l => l.sp))];
+    speak(lines.map((l, i) => {
+      const r = roles.indexOf(l.sp);
+      const v = voices.length > 1 ? voices[(voices.indexOf(voice) + r) % voices.length] : voice;
+      return { text: l.jp, line: `${b.dataset.talk}-${i}`, voice: v, pitch: voices.length > 1 ? 1 : (r ? 1.2 : 1) };
+    }), b);
+  });
+  document.querySelectorAll(".seg button").forEach(b => b.addEventListener("click", () => {
+    rate = +b.dataset.rate;
+    document.querySelectorAll(".seg button").forEach(x => x.setAttribute("aria-pressed", x === b));
+    try { localStorage.setItem("ja-rate", b.id); } catch (_) {}
+  }));
+  try { const r = localStorage.getItem("ja-rate"); if (r) document.getElementById(r)?.click(); } catch (_) {}
+
+  function show(key) {
+    const p = DATA.find(x => id(x.no) === key) || DATA[0];
+    if (synth) synth.cancel();
+    render(p);
+    document.querySelectorAll("#tabs a").forEach(a => { if (a.dataset.tab === id(p.no)) { a.setAttribute("aria-current", "page"); a.scrollIntoView({ block: "nearest", inline: "nearest" }); } else a.removeAttribute("aria-current"); });
+  }
+  document.querySelectorAll("#tabs a").forEach(a => a.addEventListener("click", e => { e.preventDefault(); show(a.dataset.tab); window.scrollTo({ top: 0 }); }));
+  show((location.hash || "#a01").slice(1));
+})();
+</script>
+
+</body>
+</html>
