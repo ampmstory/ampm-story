@@ -37,6 +37,15 @@
       "image": "images/products/AMPM_QuickNote_Product_1000x1000.png",
       "smartstore": "https://smartstore.naver.com/ampmstory/products/13803678150",
       "example": true
+    },
+    {
+      "name": "14일 완성 일본어 쓰기 플래너 히라가나 가타카나 쓰기노트 굿노트 삼성노트 속지 PDF",
+      "category": "writing",
+      "price": "6900",
+      "desc": "14일 완성 일본어 쓰기 플래너 · 히라가나 가타카나 쓰기노트 · 굿노트 · 삼성노트용 PDF 88쪽 · 다운로드 링크 발송 상품",
+      "image": "images/products/img01_cover.jpg",
+      "smartstore": "https://smartstore.naver.com/ampmstory/products/13832062526",
+      "example": false
     }
   ]
 }
