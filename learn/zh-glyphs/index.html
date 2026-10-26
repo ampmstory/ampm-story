@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>간체자 획순 이미지</title>
+<style>
+/* Layout: 한 장짜리 안내 · 내려받기 페이지. 쓰기 플래너와 같은 분홍 · 초록 톤 */
+:root { --bg:#FBFCF9; --surface:#FFFFFF; --tint:#EEF6EC; --line:#CFE3CC; --pink:#E57F91; --pink-d:#B9465C; --green:#6FAE7B; --green-d:#3F7A4B; --fg:#3B3A37; --sub:#737A72; --on:#FFFFFF;
+  --f:"Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg:#181C18; --surface:#222822; --tint:#26332A; --line:#3A4A3D; --pink:#EE93A3; --pink-d:#F4A9B6; --green:#85C391; --green-d:#A8D9B1; --fg:#EEF2EC; --sub:#AEB8AC; --on:#181C18; color-scheme:dark } }
+:root[data-theme="dark"] { --bg:#181C18; --surface:#222822; --tint:#26332A; --line:#3A4A3D; --pink:#EE93A3; --pink-d:#F4A9B6; --green:#85C391; --green-d:#A8D9B1; --fg:#EEF2EC; --sub:#AEB8AC; --on:#181C18; color-scheme:dark }
+* { box-sizing:border-box }
+body { margin:0; background:var(--bg); color:var(--fg); font:15px/1.65 var(--f); padding-left:max(16px,env(safe-area-inset-left,0px)); padding-right:max(16px,env(safe-area-inset-right,0px)); padding-block:24px 40px }
+.wrap { max-width:760px; margin:0 auto; display:grid; gap:16px }
+small.k { color:var(--green-d); font-weight:700; letter-spacing:.05em }
+h1 { margin:2px 0 0; font-size:24px; text-wrap:balance }
+.box { background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:16px 18px }
+.box h2 { margin:0 0 6px; font-size:16px; color:var(--pink-d) }
+.samples { display:flex; flex-wrap:wrap; gap:8px }
+.samples img { width:72px; height:72px; background:#fff; border:1px solid var(--line); border-radius:10px }
+a.btn { display:inline-block; background:var(--green); color:var(--on); text-decoration:none; font-weight:700; padding:12px 18px; border-radius:12px }
+a { color:var(--green-d) }
+ul { margin:6px 0 0; padding-left:20px }
+.sub { color:var(--sub); font-size:13px }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div><small class="k">14일 완성 중국어 쓰기 플래너</small><h1>간체자 획순 이미지 무료 공개</h1></div>
+  <div class="box">
+    <p style="margin:0 0 10px">쓰기 플래너에 들어간 간체자 견본 · 따라 쓰기 · 획순 단계 이미지(174자)를 누구나 무료로 받을 수 있게 공개해요.</p>
+    <div class="samples"><img src="sample/05b66_model.png" alt="学 획순 견본"><img src="sample/07231_model.png" alt="爱 획순 견본"><img src="sample/04e2d_model.png" alt="中 획순 견본"><img src="sample/056fd_model.png" alt="国 획순 견본"><img src="sample/04f60_model.png" alt="你 획순 견본"><img src="sample/0597d_model.png" alt="好 획순 견본"></div>
+    <p style="margin:14px 0 0"><a class="btn" href="zh-glyphs-apl.zip">이미지 묶음 받기 (zip, 약 13MB)</a></p>
+  </div>
+  <div class="box">
+    <h2>출처와 라이선스</h2>
+    <p style="margin:0">이 이미지는 <a href="https://github.com/skishore/makemeahanzi">Make Me a Hanzi</a> 프로젝트의 획 데이터(hanzi-writer-data 2.0.1 배포본)를 바탕으로 만들었어요. 원본 획 데이터는 Arphic Technology의 AR PL 글꼴에서 나왔고 Arphic Public License로 배포돼요. 이 이미지들도 같은 라이선스로 공개해요.</p>
+    <p style="margin:8px 0 0"><a href="ARPHICPL.TXT">라이선스 전문 (ARPHICPL.TXT)</a></p>
+  </div>
+  <div class="box">
+    <h2>바꾼 내용</h2>
+    <ul><li>획 색상 · 굵기 변경</li><li>한 획씩 쌓이는 단계별 획순 이미지로 재구성</li><li>획순 번호 표시 추가</li></ul>
+    <p class="sub" style="margin:8px 0 0">묶음 안에 이미지를 만든 스크립트(render_glyphs_zh.py)와 설명(README.txt)도 함께 넣었어요.</p>
+  </div>
+  <p class="sub">이 페이지는 이미지 공개용이에요. 쓰기 플래너의 레이아웃 · 설명 글 · 단어 구성은 포함되지 않아요. · <a href="https://ampmstory.com/">AMPM STORY</a></p>
+</div>
+</body>
+</html>
