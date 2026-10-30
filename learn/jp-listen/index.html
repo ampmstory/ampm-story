@@ -94,6 +94,7 @@ footer.src { margin-top: 18px; font-size: 12px; color: var(--sub) }
     </div>
   </header>
   <nav class="tabs" id="tabs" aria-label="부록 페이지"></nav>
+  <div class="notice" id="sound-tip"><b>소리가 안 나면</b> ① 아이폰 무음 모드를 끄고(옆면 스위치나 제어 센터의 종 모양) ② 음량 버튼으로 소리를 올린 뒤 ③ 아래 버튼으로 확인해 보세요. <button class="play ghost" type="button" id="sound-test" style="min-height:36px;padding:6px 12px;margin-left:4px">▶ 소리 테스트</button></div>
   <div class="notice" id="voice-note">노트의 부록 번호와 같은 탭이에요. 들은 뒤 소리 내어 따라 읽고, 노트에 써 보세요.</div>
   <main id="panel"></main>
   <footer class="src">기기에 들어 있는 일본어 음성으로 읽어 줘요. 한글 발음은 참고용이고, 기기마다 목소리가 조금 다를 수 있어요.<br><a href="https://ampmstory.com/" style="color:inherit">AMPM STORY</a></footer>
@@ -145,27 +146,32 @@ const DATA = [{"no": 1, "title": "아침 · 낮 · 저녁 인사", "expr": [{"jp
     voices = synth.getVoices().filter(v => /^ja/i.test(v.lang));
     const sel = $("#voice");
     sel.innerHTML = voices.length ? voices.map((v, i) => `<option value="${i}">${esc(v.name)}</option>`).join("") : `<option>기본 음성</option>`;
-    voice = voices[0] || null;
+    const keep = voice && voices.includes(voice) ? voice : null;
+    sel.innerHTML = `<option value="-1">기본 음성 (추천)</option>` + voices.map((v, i) => `<option value="${i}">${esc(v.name)}</option>`).join("");
+    voice = keep; sel.value = keep ? String(voices.indexOf(keep)) : "-1";
     if (!voices.length) $("#voice-note").innerHTML = "<b>이 기기에서 일본어 음성을 찾지 못했어요.</b> 아이폰·아이패드는 설정 → 손쉬운 사용 → 읽기 및 말하기 → 음성에서 일본어 음성을 추가할 수 있어요.";
   }
   if (synth) { loadVoices(); synth.onvoiceschanged = loadVoices; }
   else $("#voice-note").innerHTML = "<b>이 브라우저는 음성 재생을 지원하지 않아요.</b> Safari나 Chrome 최신 버전에서 열어 주세요.";
-  $("#voice").addEventListener("change", e => { voice = voices[+e.target.value] || null; });
+  $("#voice").addEventListener("change", e => { voice = +e.target.value >= 0 ? voices[+e.target.value] : null; });
 
   let onBtn = null;
   function clearOn() { if (onBtn) onBtn.classList.remove("on"); document.querySelectorAll(".line.on").forEach(l => l.classList.remove("on")); }
   function speak(items, btn) {
     if (!synth) return;
-    synth.cancel(); clearOn(); onBtn = btn; if (btn) btn.classList.add("on");
+    if (synth.speaking || synth.pending) synth.cancel();
+    if (synth.paused) synth.resume();
+    clearOn(); onBtn = btn; if (btn) btn.classList.add("on");
     items.forEach((it, i) => {
       const u = new SpeechSynthesisUtterance(it.text);
       u.lang = "ja-JP"; u.rate = it.rate || rate; if (it.voice || voice) u.voice = it.voice || voice; if (it.pitch) u.pitch = it.pitch;
       u.onstart = () => { $("#st-msg").innerHTML = `재생 중 <b>${esc(it.text)}</b>`; document.querySelectorAll(".line.on").forEach(l => l.classList.remove("on")); if (it.line) document.querySelector(`[data-line="${it.line}"]`)?.classList.add("on"); };
       u.onend = () => { if (i === items.length - 1) { clearOn(); $("#st-msg").textContent = "재생 끝 · 소리 내어 따라 읽어 보세요"; } };
-      u.onerror = () => { clearOn(); $("#st-msg").textContent = "재생하지 못했어요. 화면을 한 번 누른 뒤 다시 시도해 보세요."; };
+      u.onerror = (ev) => { clearOn(); if (ev && ev.error === "interrupted") return; $("#st-msg").textContent = "재생하지 못했어요. 무음 모드를 끄고 음량을 올린 뒤 다시 눌러 보세요."; };
       synth.speak(u);
     });
   }
+  document.getElementById("sound-test").addEventListener("click", e => speak([{ text: "こんにちは" }], e.currentTarget));
   document.addEventListener("click", e => {
     const b = e.target.closest("[data-say],[data-talk]");
     if (!b) return;
@@ -174,8 +180,8 @@ const DATA = [{"no": 1, "title": "아침 · 낮 · 저녁 인사", "expr": [{"jp
     const roles = [...new Set(lines.map(l => l.sp))];
     speak(lines.map((l, i) => {
       const r = roles.indexOf(l.sp);
-      const v = voices.length > 1 ? voices[(voices.indexOf(voice) + r) % voices.length] : voice;
-      return { text: l.jp, line: `${b.dataset.talk}-${i}`, voice: v, pitch: voices.length > 1 ? 1 : (r ? 1.2 : 1) };
+      const v = voice && voices.length > 1 ? voices[(voices.indexOf(voice) + r) % voices.length] : voice;
+      return { text: l.jp, line: `${b.dataset.talk}-${i}`, voice: v, pitch: voice && voices.length > 1 ? 1 : (r ? 1.2 : 1) };
     }), b);
   });
   document.querySelectorAll(".seg button").forEach(b => b.addEventListener("click", () => {
