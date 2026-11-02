@@ -214,6 +214,18 @@ tr.sub .heat i.h2{background:color-mix(in srgb,var(--accent) 60%,var(--surface))
 .evbanner .pill:not(.scope-all):not(.scope-d){background:var(--surface)}
 .sec-title{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
 .group-h{font-size:13px;font-weight:700;color:var(--muted);padding:12px 0 2px}
+.viewsel{display:flex;gap:6px;overflow-x:auto;padding:2px 2px 6px;scrollbar-width:thin}
+.vbtn{flex:0 0 auto;border:2px solid transparent;background:var(--surface);border-radius:14px;padding:8px 12px;font-weight:700;display:flex;align-items:center;gap:6px;box-shadow:var(--shadow);font-size:14px}
+.vbtn[aria-pressed="true"]{border-color:var(--accent)}
+.vs{font-size:11px;padding:2px 7px;border-radius:999px}
+.vs.all{background:var(--accent);color:var(--accent-ink)} .vs.d{background:var(--sky);color:var(--sky-ink)}
+.evhead{border-radius:24px;padding:16px 18px;background:linear-gradient(120deg,var(--butter),var(--pink));display:flex;flex-direction:column;gap:8px}
+.evhead h2{font-size:24px}
+.evhead .bar{height:12px;border-radius:6px;background:color-mix(in srgb,var(--surface) 70%,transparent);overflow:hidden}
+.evhead .bar i{display:block;height:100%;background:var(--accent);border-radius:6px}
+.evhead .pill:not(.scope-all):not(.scope-d){background:var(--surface)}
+.chk{border:0;border-radius:12px;padding:9px 14px;font-weight:700;background:var(--sunk);color:var(--muted);min-width:96px}
+.chk[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
 @media (prefers-reduced-motion:reduce){.cell.new{animation:none}.abtn:hover{transform:none}}
 </style>
 
@@ -264,6 +276,7 @@ function makeCore(st) {
 
   function pubT(t) { return { id: t.id, district: String(t.district), name: String(t.name), active: isActive(t), createdAt: +t.createdAt || 0 }; }
   function pubE(e) { return { id: e.id, name: String(e.name), scope: String(e.scope || 'all'), start: String(e.start), end: String(e.end), goal: +e.goal || 30, createdBy: String(e.createdBy || ''), createdAt: +e.createdAt || 0 }; }
+  function parseExtra(v) { try { var o = typeof v === 'string' && v ? JSON.parse(v) : (v && typeof v === 'object' ? v : {}); return o && typeof o === 'object' ? o : {}; } catch (e) { return {}; } }
   function events() { return st.all('Events').filter(isActive).map(pubE).sort(function (a, b) { return a.start < b.start ? 1 : a.start > b.start ? -1 : 0; }); }
 
   function memberViews(members, awards) {
@@ -273,7 +286,7 @@ function makeCore(st) {
       var mine = by[m.id] || [];
       var map = function (a) { var o = { id: a.id, cat: a.cat, note: String(a.note || ''), at: +a.at, wk: String(a.wk) }; if (a.status === 'cancel') o.delAt = +a.delAt; return o; };
       return {
-        id: m.id, teacherId: m.teacherId, name: String(m.name), size: +m.size === 50 ? 50 : 30, active: isActive(m),
+        id: m.id, teacherId: m.teacherId, name: String(m.name), size: +m.size === 50 ? 50 : 30, active: isActive(m), extra: parseExtra(m.extra),
         awards: mine.filter(function (a) { return a.status !== 'cancel'; }).map(map),
         removed: mine.filter(function (a) { return a.status === 'cancel'; }).map(map)
       };
@@ -282,8 +295,8 @@ function makeCore(st) {
   function mePayload(t) {
     var aw = st.all('Awards').filter(function (a) { return a.teacherId === t.id; });
     var ms = st.all('Members').filter(function (m) { return m.teacherId === t.id; });
-    var today = kstDate(Date.now());
-    var evs = events().filter(function (e) { return (e.scope === 'all' || e.scope === String(t.district)) && e.end >= today; });
+    var since = kstDate(Date.now() - 60 * 864e5);
+    var evs = events().filter(function (e) { return (e.scope === 'all' || e.scope === String(t.district)) && e.end >= since; });
     return { teacher: pubT(t), members: memberViews(ms, aw), events: evs, now: Date.now() };
   }
   function teacherToken(t) { return tok('t:' + t.id + ':' + (t.pinHash || '')); }
@@ -309,6 +322,7 @@ function makeCore(st) {
       members: memberViews(st.all('Members'), st.all('Awards')),
       events: events(), now: Date.now()
     };
+    out.attends = st.all('Attends').filter(isActive).map(function (x) { return { eventId: x.eventId, memberId: x.memberId, at: +x.at || 0, by: String(x.by || '') }; });
     if (a.master) out.admins = st.all('Admins').filter(isActive).map(function (x) { return { id: x.id, name: String(x.name), createdAt: +x.createdAt || 0 }; });
     return out;
   }
@@ -369,6 +383,19 @@ function makeCore(st) {
         if (r.cat === 'special' && list.filter(function (a) { return a.cat === 'special'; }).length >= 2) fail('특별 스티커는 주 2개까지예요.');
         if (used + c.n > WEEK_MAX) fail('이번 주 최대 ' + WEEK_MAX + '개를 모두 받았어요.');
         st.append('Awards', { id: rid('a'), memberId: m.id, teacherId: t.id, cat: r.cat, n: c.n, note: note, at: now, wk: wk, status: 'ok', delAt: '' });
+        return mePayload(t);
+      });
+    },
+
+    memberBoard: function (r) {
+      var t = teacherAuth(r);
+      return st.locked(function () {
+        var m = st.all('Members').filter(function (x) { return x.id === r.mid && x.teacherId === t.id; })[0];
+        if (!m) fail('회원을 찾을 수 없어요.');
+        if (!byId('Events', r.eid)) fail('행사를 찾을 수 없어요.');
+        var ex = parseExtra(m.extra), n = Math.max(0, Math.min(10, (+ex[r.eid] || 0) + (+r.delta < 0 ? -1 : 1)));
+        if (n) ex[r.eid] = n; else delete ex[r.eid];
+        m.extra = JSON.stringify(ex); st.update('Members', m);
         return mePayload(t);
       });
     },
@@ -472,6 +499,18 @@ function makeCore(st) {
       });
     },
 
+    attendSet: function (r) {
+      var a = adminAuth(r);
+      return st.locked(function () {
+        if (!byId('Events', r.eid)) fail('행사를 찾을 수 없어요.');
+        if (!byId('Members', r.mid)) fail('회원을 찾을 수 없어요.');
+        var x = st.all('Attends').filter(function (z) { return z.eventId === r.eid && z.memberId === r.mid; })[0];
+        if (x) { x.active = !!r.on; x.at = Date.now(); x.by = a.name; st.update('Attends', x); }
+        else if (r.on) st.append('Attends', { id: rid('at'), eventId: r.eid, memberId: r.mid, at: Date.now(), by: a.name, active: true });
+        return adminPayload(a);
+      });
+    },
+
     eventDelete: function (r) {
       var a = adminAuth(r);
       return st.locked(function () {
@@ -529,8 +568,9 @@ function demoCore(){
     mem = {Teachers:[
       {id:'t_demo1', district:'내외지구', name:'김민지', pinHash:h('ht_demo1:1234'), createdAt:now, active:true},
       {id:'t_demo2', district:'중앙지구', name:'이수진', pinHash:h('ht_demo2:1234'), createdAt:now, active:true}
-    ], Members:[], Awards:[], Admins:[], Events:[]};
+    ], Members:[], Awards:[], Admins:[], Events:[], Attends:[]};
   }
+  ['Teachers','Members','Awards','Admins','Events','Attends'].forEach(k => { mem[k] = mem[k] || []; });
   const save = () => ls.set('stk_demo2', JSON.stringify(mem));
   const st = {
     all: n => mem[n].map(o => ({...o})),
@@ -569,7 +609,8 @@ const S = {
   pending: null, specialNote:'', newCells:0, busy:false,
   addName:'', addSize:30, recFilter:'all', delConfirm:null,
   open:{}, aDistrict:'all', evSel:null, evForm:null, evDel:null,
-  tForm:null, tConfirm:null, adForm:{name:'', pw:''}, adDel:null
+  tForm:null, tConfirm:null, adForm:{name:'', pw:''}, adDel:null,
+  view:'all', attFilter:'elig', attQ:''
 };
 const app = document.getElementById('app'), tabsEl = document.getElementById('tabs'), whoEl = document.getElementById('who'), layer = document.getElementById('layer');
 if (DEMO) document.getElementById('demoBar').innerHTML = `<div class="demo">체험 모드 · 이 기기에만 저장 · 마스터 비밀번호 ${DEMO_PW} · 예시 선생님 PIN 1234</div>`;
@@ -729,26 +770,71 @@ function adminLoginView(){
 }
 
 // ----- teacher: board -----
-function eventBanners(m){
+function evBoards(m, e){
+  const seq = [];
+  m.awards.filter(a => { const d = kstDate(a.at); return d >= e.start && d <= e.end; })
+    .sort((a,b)=>a.at-b.at).forEach(a => { for (let i=0;i<(CAT[a.cat]?.n||0);i++) seq.push(CAT[a.cat].g); });
+  const size = m.size || 30, n = seq.length, extra = +(m.extra?.[e.id] || 0);
+  let need = Math.max(1, Math.ceil(n/size));
+  if (n > 0 && n % size === 0 && evStatus(e) === 'live') need++;
+  const count = Math.max(need, Math.ceil(n/size) + extra, 1 + extra);
+  const boards = Array.from({length:count}, (_,i) => ({label:`행사판 ${i+1}`, cur: seq.slice(i*size, (i+1)*size), size}));
+  const lastEmpty = boards.length > 1 && boards[boards.length-1].cur.length === 0;
+  return {boards, n, size, extra, canRemove: extra > 0 && lastEmpty};
+}
+function gridHTML(cur, size, animFrom){
+  let cells = '';
+  for (let i=0;i<size;i++){ const g = cur[i]; cells += g ? `<div class="cell on ${g}${animFrom!=null && i>=animFrom ? ' new':''}">${svg(g)}</div>` : `<div class="cell">${i+1}</div>`; }
+  return `<div class="grid ${size===50?'g50':''}">${cells}</div>`;
+}
+function viewSelector(){
   if (!S.tevents.length) return '';
-  return S.tevents.map(e => {
-    const st = evStatus(e), n = sumIn(m, e.start, e.end), pct = Math.min(100, Math.round(n/e.goal*100));
-    return `<div class="evbanner">
-      <div class="row between"><div class="row">${scopePill(e.scope)}${statusPill(e)}<b>${esc(e.name)}</b></div><span class="small num">${fmtMD(e.start)} ~ ${fmtMD(e.end)}</span></div>
-      ${st==='soon' ? `<div class="small">${fmtMD(e.start)}부터 붙인 스티커가 행사에 들어가요 · ${e.goal}개 이상 시상</div>`
-        : `<div class="row between small"><span>${esc(m.name)} 행사 기간 스티커</span><b class="num">${n} / ${e.goal}개</b></div><div class="bar"><i style="width:${pct}%"></i></div>`}
-    </div>`;
-  }).join('');
+  const evs = [...S.tevents].sort((a,b)=> (evStatus(a)==='done') - (evStatus(b)==='done') || (a.start < b.start ? -1 : 1));
+  return `<div class="viewsel" role="tablist" aria-label="스티커판 보기">
+    <button class="vbtn" aria-pressed="${S.view==='all'}" data-act="view" data-v="all">전체 스티커판</button>
+    ${evs.map(e => `<button class="vbtn ev" aria-pressed="${S.view===e.id}" data-act="view" data-v="${e.id}"><span class="vs ${e.scope==='all'?'all':'d'}">${esc(scopeLabel(e.scope))}</span>${esc(e.name)}${evStatus(e)==='done'?' · 종료':evStatus(e)==='soon'?' · 예정':''}</button>`).join('')}
+  </div>`;
 }
 function boardView(){
   const list = activeMembers();
   if (!list.length) return `<div class="card empty"><h3 style="color:var(--ink);margin-bottom:6px">아직 등록된 회원이 없어요</h3><p style="margin:0 0 14px">‘내 회원’에서 아이 이름을 등록하면 스티커판이 만들어져요.</p><button class="btn primary" data-act="tab" data-v="members">회원 등록하러 가기</button></div>`;
   if (!S.sel || !list.find(m=>m.id===S.sel)) S.sel = list[0].id;
+  if (S.view !== 'all' && !S.tevents.find(e=>e.id===S.view)) S.view = 'all';
   const wk = weekKey(Date.now());
   const chips = list.map(m => `<button class="chip" aria-pressed="${m.id===S.sel}" data-act="sel" data-v="${m.id}">${esc(m.name)}<span class="c num">${weekState(m,wk).used}/${WEEK_MAX}</span></button>`).join('');
-  const m = list.find(x=>x.id===S.sel), b = boardCells(m);
-  let cells = ''; const newFrom = b.cur.length - S.newCells;
-  for (let i=0;i<b.size;i++){ const g = b.cur[i]; cells += g ? `<div class="cell on ${g}${S.newCells && i>=newFrom ? ' new':''}">${svg(g)}</div>` : `<div class="cell">${i+1}</div>`; }
+  const m = list.find(x=>x.id===S.sel);
+  const ev = S.view === 'all' ? null : S.tevents.find(e=>e.id===S.view);
+  let boardHTML;
+  if (!ev) {
+    const b = boardCells(m);
+    boardHTML = `<div class="board">
+      <div class="board-head"><div><div class="small muted">${b.boardNo}번째 판${b.boardsDone && !b.full ? ` · 완성 ${b.boardsDone}판` : ''}</div><h2>${esc(m.name)}의 칭찬스티커판</h2></div>
+        <div class="ring" style="--p:${Math.round(b.cur.length/b.size*100)}"><span><b class="num">${b.cur.length}</b><small class="num">/ ${b.size}</small></span></div></div>
+      ${gridHTML(b.cur, b.size, S.newCells ? b.cur.length - S.newCells : null)}
+      ${legend()}
+      ${b.full ? `<div class="done-banner">판 완성! 다음 스티커부터 새 판이 시작돼요</div>` : ''}
+    </div>`;
+  } else {
+    const E = evBoards(m, ev), st = evStatus(ev), pct = Math.min(100, Math.round(E.n/ev.goal*100));
+    let lastNE = 0; E.boards.forEach((bd,i) => { if (bd.cur.length) lastNE = i; });
+    boardHTML = `<div class="evhead">
+        <div class="row between"><div class="row">${scopePill(ev.scope)}${statusPill(ev)}</div><span class="small num">${fmtMD(ev.start)} ~ ${fmtMD(ev.end)}</span></div>
+        <h2>${esc(ev.name)}</h2>
+        <div class="row between small"><span>${esc(m.name)} 행사 기간 스티커 · ${ev.goal}개 이상 시상</span><b class="num">${E.n} / ${ev.goal}개</b></div>
+        <div class="bar"><i style="width:${pct}%"></i></div>
+        ${st==='soon' ? `<div class="small">아직 행사 전이에요. ${fmtMD(ev.start)}부터 붙인 스티커가 여기에 모여요.</div>` : st==='done' ? `<div class="small">종료된 행사예요. 지금 붙이는 스티커는 이 판에 들어가지 않아요.</div>` : ''}
+      </div>
+      ${E.boards.map((bd,i) => `<div class="board">
+        <div class="board-head"><div><div class="small muted">${bd.label}</div><h2>${esc(m.name)}의 행사 스티커판</h2></div>
+          <div class="ring" style="--p:${Math.round(bd.cur.length/bd.size*100)}"><span><b class="num">${bd.cur.length}</b><small class="num">/ ${bd.size}</small></span></div></div>
+        ${gridHTML(bd.cur, bd.size, S.newCells && i===lastNE ? bd.cur.length - S.newCells : null)}
+        ${i===E.boards.length-1 ? legend() : ''}
+      </div>`).join('')}
+      <div class="row" style="justify-content:center">
+        <button class="btn" data-act="boardAdd" data-v="${ev.id}">+ 스티커판 추가</button>
+        ${E.canRemove ? `<button class="btn" data-act="boardRemove" data-v="${ev.id}">빈 판 빼기</button>` : ''}
+      </div>`;
+  }
   const ws = weekState(m, wk);
   const meter = Array.from({length:WEEK_MAX},(_,i)=>`<i class="${i<ws.used?'f':''}"></i>`).join('');
   const ab = (cat, sub, off) => `<button class="abtn ${CAT[cat].g}" data-act="award" data-v="${cat}" ${off?'disabled':''}><b>${CAT[cat].short} +${CAT[cat].n}</b><span>${sub}</span></button>`;
@@ -757,14 +843,8 @@ function boardView(){
   const pend = S.pending ? CAT[S.pending] : null;
   return `<div class="stack">
     <div class="chips" aria-label="회원 선택">${chips}</div>
-    ${eventBanners(m)}
-    <div class="board">
-      <div class="board-head"><div><div class="small muted">${b.boardNo}번째 판${b.boardsDone && !b.full ? ` · 완성 ${b.boardsDone}판` : ''}</div><h2>${esc(m.name)}의 칭찬스티커판</h2></div>
-        <div class="ring" style="--p:${Math.round(b.cur.length/b.size*100)}"><span><b class="num">${b.cur.length}</b><small class="num">/ ${b.size}</small></span></div></div>
-      <div class="grid ${b.size===50?'g50':''}">${cells}</div>
-      ${legend()}
-      ${b.full ? `<div class="done-banner">판 완성! 다음 스티커부터 새 판이 시작돼요</div>` : ''}
-    </div>
+    ${viewSelector()}
+    ${boardHTML}
     <button class="btn primary" data-act="export">학부모에게 보내기</button>
     <div class="card stack">
       <div class="week"><div><h3>이번 주 스티커</h3><div class="small muted">${fmtMD(wk)} ~ ${fmtMD(addDays(wk,6))} · 매주 월요일 초기화</div></div>
@@ -927,28 +1007,39 @@ function eventForm(){
       <div class="row"><button class="btn" data-act="evFormClose">닫기</button><button class="btn primary" data-act="evSave">저장</button></div></div>
   </div>`;
 }
+function attendMap(eid){ const o = {}; (S.adm.attends||[]).forEach(a => { if (a.eventId===eid) o[a.memberId] = a; }); return o; }
 function eventDetail(e){
   const weeks = weeksBetween(e.start, e.end);
   const inR = at => { const x = kstDate(at); return x >= e.start && x <= e.end; };
   const groups = admRows(weeks, inR, e.scope === 'all' ? null : e.scope);
   const all = groups.flatMap(g => g.members.map(r => ({...r, t:g.t})));
   const elig = all.filter(r => r.sum >= e.goal).sort((a,b)=>b.sum-a.sum);
-  const sum = all.reduce((s,r)=>s+r.sum,0);
+  const att = attendMap(e.id);
+  const attN = all.filter(r => att[r.m.id]).length, eligAtt = elig.filter(r => att[r.m.id]).length;
+  const q = S.attQ.trim();
+  let rows = S.attFilter === 'elig' ? elig : S.attFilter === 'done' ? all.filter(r=>att[r.m.id]) : [...all].sort((a,b)=>b.sum-a.sum);
+  if (q) rows = rows.filter(r => r.m.name.includes(q) || r.t.name.includes(q));
   return `<div class="stack">
     <div class="sec-title"><div><div class="row">${scopePill(e.scope)}${statusPill(e)}</div><h2 style="margin-top:6px">${esc(e.name)}</h2><div class="small muted num">${fmtMD(e.start)} ~ ${fmtMD(e.end)} · ${weeks.length}주 · ${e.goal}개 이상 시상</div></div>${e.scope==='all' ? districtFilter() : ''}</div>
     <div class="tiles">
-      <div class="tile"><span>선생님</span><b>${groups.length}</b></div>
       <div class="tile"><span>회원</span><b>${all.length}</b></div>
-      <div class="tile"><span>기간 내 스티커</span><b>${sum}</b></div>
+      <div class="tile"><span>기간 내 스티커</span><b>${all.reduce((s,r)=>s+r.sum,0)}</b></div>
       <div class="tile"><span>시상 대상</span><b>${elig.length}</b></div>
+      <div class="tile"><span>행사 참여</span><b>${attN}</b></div>
+    </div>
+    <div class="card stack">
+      <div class="row between"><h3>행사 참여 체크</h3><span class="small muted num">시상 대상 ${eligAtt}/${elig.length}명 참여 · 전체 ${attN}명</span></div>
+      <div class="row between">
+        <div class="seg"><button aria-pressed="${S.attFilter==='elig'}" data-act="attFilter" data-v="elig">시상 대상</button><button aria-pressed="${S.attFilter==='all'}" data-act="attFilter" data-v="all">전체 회원</button><button aria-pressed="${S.attFilter==='done'}" data-act="attFilter" data-v="done">참여 완료</button></div>
+        <div style="flex:1;min-width:140px;max-width:240px"><input type="text" id="attq" data-in="attQ" value="${esc(S.attQ)}" placeholder="아이·선생님 이름 검색" aria-label="이름 검색"></div>
+      </div>
+      ${rows.length ? `<div class="list">${rows.map(r => { const a = att[r.m.id]; return `<div class="li">
+          <div class="main"><b>${esc(r.m.name)} ${r.sum >= e.goal ? '<span class="pill ok">대상</span>' : ''}</b><span class="small muted">${esc(r.t.district)} · ${esc(r.t.name)} 선생님 · <span class="num">${r.sum}개</span>${a ? ` · ${fmtTime(a.at)} ${esc(a.by)}` : ''}</span></div>
+          <button class="chk" aria-pressed="${!!a}" data-act="attend" data-v="${r.m.id}">${a ? '참여 완료' : '참여 체크'}</button></div>`; }).join('')}</div>`
+        : `<div class="empty">${q ? '검색 결과가 없어요.' : S.attFilter==='elig' ? `기간 안에 ${e.goal}개 이상 모은 회원이 여기에 나타나요.` : S.attFilter==='done' ? '아직 참여 체크한 회원이 없어요.' : '해당 회원이 없어요.'}</div>`}
+      <div class="row" style="justify-content:flex-end"><button class="btn sm" data-act="copyList" ${elig.length?'':'disabled'}>시상 명단 복사</button><button class="btn sm" data-act="csv">전체 CSV</button></div>
     </div>
     ${groupTable(groups, weeks, {event:true, goal:e.goal})}
-    <div class="card stack">
-      <div class="row between"><h3>시상 대상 명단 <span class="muted num">${elig.length}명</span></h3>
-        <div class="row"><button class="btn sm" data-act="copyList" ${elig.length?'':'disabled'}>명단 복사</button><button class="btn sm" data-act="csv">전체 CSV</button></div></div>
-      ${elig.length ? `<div class="list">${elig.map((r,i)=>`<div class="li"><span class="num muted" style="width:24px">${i+1}</span><div class="main"><b>${esc(r.m.name)}</b><span class="small muted">${esc(r.t.district)} · ${esc(r.t.name)} 선생님</span></div><b class="num">${r.sum}개</b></div>`).join('')}</div>`
-        : `<div class="empty">기간 안에 ${e.goal}개 이상 모은 회원이 여기에 나타나요.</div>`}
-    </div>
   </div>`;
 }
 function eventsView(){
@@ -1028,14 +1119,13 @@ function adminsView(){
 }
 
 // ---------- image export ----------
-async function makeImage(m){
+async function makeImage(spec){
   try { await Promise.all([document.fonts.load('40px Jua'), document.fonts.load('700 20px "Noto Sans KR"')]); } catch {}
-  const b = boardCells(m);
-  const W = 1080, cols = b.size===50 ? 10 : 6, rows = Math.ceil(b.size/cols);
-  const gap = 18, padX = 80, cellW = (W - padX*2 - gap*(cols-1)) / cols;
-  const headH = 300, gridH = rows*cellW + (rows-1)*gap;
-  const notes = m.awards.filter(a=>a.cat==='special' && a.note).sort((x,y)=>y.at-x.at).slice(0,2);
-  const H = Math.round(headH + gridH + 120 + notes.length*64 + 130);
+  const W = 1080, gap = 18, padX = 80, headH = 300, multi = spec.boards.length > 1, labelH = multi ? 64 : 0, boardGap = 56;
+  const geo = spec.boards.map(bd => { const cols = bd.size===50 ? 10 : 6, rows = Math.ceil(bd.size/cols), cellW = (W - padX*2 - gap*(cols-1)) / cols; return {cols, rows, cellW, h: labelH + rows*cellW + (rows-1)*gap}; });
+  const gridsH = geo.reduce((s,g)=>s+g.h,0) + boardGap*(geo.length-1);
+  const notes = spec.notes || [];
+  const H = Math.round(headH + gridsH + 120 + notes.length*64 + 130);
   const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
   const x = cv.getContext('2d');
   const C = {bg:'#E3F1D3', paper:'#FFFFFF', band:'#DDF0CF', ink:'#24321D', muted:'#6D7B64', line:'#E1EAD5', accent:'#5FAE4C'};
@@ -1045,23 +1135,30 @@ async function makeImage(m){
   rr(40,40,W-80,H-80,48); x.fillStyle = C.paper; x.fill();
   x.save(); rr(40,40,W-80,H-80,48); x.clip(); const gr = x.createLinearGradient(0,40,0,420); gr.addColorStop(0,C.band); gr.addColorStop(1,C.paper); x.fillStyle = gr; x.fillRect(40,40,W-80,380); x.restore();
   x.fillStyle = C.muted; x.font = '700 30px "Noto Sans KR", sans-serif';
-  x.fillText(`${b.boardNo}번째 판 · ${kstDate(Date.now()).replace(/-/g,'.')}`, padX, 130);
+  x.fillText(spec.sub, padX, 130, W - padX*2 - 260);
   x.fillStyle = C.ink; x.font = '76px Jua, sans-serif';
-  x.fillText(`${m.name}의 칭찬스티커판`, padX, 220, W - padX*2 - 10);
+  x.fillText(spec.title, padX, 220, W - padX*2 - 10);
   x.fillStyle = C.accent; x.font = '56px Jua, sans-serif'; x.textAlign='right';
-  x.fillText(`${b.cur.length} / ${b.size}`, W-padX, 130); x.textAlign='left';
+  x.fillText(spec.count, W-padX, 130); x.textAlign='left';
   const paths = {study:new Path2D(ICON.study), write:new Path2D(ICON.write), special:new Path2D(ICON.special)};
-  for (let i=0;i<b.size;i++){
-    const cx = padX + (i%cols)*(cellW+gap) + cellW/2, cy = headH + Math.floor(i/cols)*(cellW+gap) + cellW/2, r = cellW/2, g = b.cur[i];
-    if (g){
-      x.beginPath(); x.arc(cx,cy,r,0,Math.PI*2); x.fillStyle = col[g]; x.fill();
-      x.save(); const s = (cellW*0.6)/24; x.translate(cx-12*s, cy-12*s); x.scale(s,s); x.fillStyle='#fff'; x.fill(paths[g]); x.restore();
-    } else {
-      x.beginPath(); x.arc(cx,cy,r-3,0,Math.PI*2); x.setLineDash([10,8]); x.lineWidth=4; x.strokeStyle=C.line; x.stroke(); x.setLineDash([]);
-      x.fillStyle = C.muted; x.font = `700 ${Math.round(cellW*0.28)}px "Noto Sans KR", sans-serif`; x.textAlign='center'; x.textBaseline='middle'; x.fillText(String(i+1), cx, cy); x.textAlign='left'; x.textBaseline='alphabetic';
+  let top = headH;
+  spec.boards.forEach((bd, bi) => {
+    const g = geo[bi];
+    if (multi) { x.fillStyle = C.accent; x.font = '40px Jua, sans-serif'; x.fillText(`${bd.label}  ${bd.cur.length}/${bd.size}`, padX, top + 40); }
+    const gt = top + labelH;
+    for (let i=0;i<bd.size;i++){
+      const cx = padX + (i%g.cols)*(g.cellW+gap) + g.cellW/2, cy = gt + Math.floor(i/g.cols)*(g.cellW+gap) + g.cellW/2, r = g.cellW/2, k = bd.cur[i];
+      if (k){
+        x.beginPath(); x.arc(cx,cy,r,0,Math.PI*2); x.fillStyle = col[k]; x.fill();
+        x.save(); const s = (g.cellW*0.6)/24; x.translate(cx-12*s, cy-12*s); x.scale(s,s); x.fillStyle='#fff'; x.fill(paths[k]); x.restore();
+      } else {
+        x.beginPath(); x.arc(cx,cy,r-3,0,Math.PI*2); x.setLineDash([10,8]); x.lineWidth=4; x.strokeStyle=C.line; x.stroke(); x.setLineDash([]);
+        x.fillStyle = C.muted; x.font = `700 ${Math.round(g.cellW*0.28)}px "Noto Sans KR", sans-serif`; x.textAlign='center'; x.textBaseline='middle'; x.fillText(String(i+1), cx, cy); x.textAlign='left'; x.textBaseline='alphabetic';
+      }
     }
-  }
-  let y = headH + gridH + 80;
+    top += g.h + boardGap;
+  });
+  let y = headH + gridsH + 80;
   x.font = '700 28px "Noto Sans KR", sans-serif';
   let lx = padX; [['study','교재풀이'],['write','글씨'],['special','특별']].forEach(([g,l]) => { x.beginPath(); x.arc(lx+14,y-10,14,0,Math.PI*2); x.fillStyle=col[g]; x.fill(); x.fillStyle=C.muted; x.fillText(l, lx+38, y); lx += 38 + x.measureText(l).width + 40; });
   y += 30;
@@ -1070,17 +1167,32 @@ async function makeImage(m){
   x.fillText(`${tLabel(S.teacher)} 선생님이 칭찬해요`, W-padX, H-90); x.textAlign='left';
   return await new Promise(res => cv.toBlob(res, 'image/png'));
 }
+function exportSpec(m){
+  const ev = S.view === 'all' ? null : S.tevents.find(e=>e.id===S.view);
+  const dateTxt = kstDate(Date.now()).replace(/-/g,'.');
+  if (!ev) {
+    const b = boardCells(m);
+    return {title:`${m.name}의 칭찬스티커판`, sub:`${b.boardNo}번째 판 · ${dateTxt}`, count:`${b.cur.length} / ${b.size}`,
+      boards:[{label:'', cur:b.cur, size:b.size}], notes: m.awards.filter(a=>a.cat==='special' && a.note).sort((x,y)=>y.at-x.at).slice(0,2), file:`${m.name}_칭찬스티커_${kstDate(Date.now())}.png`};
+  }
+  const E = evBoards(m, ev);
+  const boards = E.boards.filter((bd,i) => i===0 || bd.cur.length);
+  const inR = a => { const d = kstDate(a.at); return d >= ev.start && d <= ev.end; };
+  return {title:`${m.name}의 행사 스티커판`, sub:`${ev.name} · ${fmtMD(ev.start)}~${fmtMD(ev.end)}`, count:`${E.n} / ${ev.goal}`,
+    boards, notes: m.awards.filter(a=>a.cat==='special' && a.note && inR(a)).sort((x,y)=>y.at-x.at).slice(0,2), file:`${m.name}_${ev.name}_${kstDate(Date.now())}.png`};
+}
 async function openExport(){
   const m = S.members.find(x=>x.id===S.sel); if (!m) return;
   layer.innerHTML = `<div class="modal"><div class="modal-in"><div class="empty">이미지를 만드는 중…</div></div></div>`;
-  const blob = await makeImage(m);
+  const spec = exportSpec(m);
+  const blob = await makeImage(spec);
   const url = URL.createObjectURL(blob);
-  const fname = `${m.name}_칭찬스티커_${kstDate(Date.now())}.png`;
+  const fname = spec.file.replace(/[\\/:*?"<>|]/g,'_');
   const file = new File([blob], fname, {type:'image/png'});
   const canShare = !!(navigator.canShare && navigator.canShare({files:[file]}));
   let dl = null; try { dl = window.claude?.use ? await window.claude.use('downloads') : null; } catch {}
   layer.innerHTML = `<div class="modal" data-act="closeModal"><div class="modal-in" data-stop="1">
-    <h3>${esc(m.name)} 스티커판</h3>
+    <h3>${esc(spec.title)}</h3>
     <img src="${url}" alt="${esc(m.name)}의 칭찬스티커판 이미지">
     ${canShare ? `<button class="btn primary" id="shareImg">카카오톡으로 보내기</button>` : ''}
     ${dl ? `<button class="btn ${canShare?'':'primary'}" id="saveImg">이미지 저장</button>` : `<a class="btn ${canShare?'':'primary'}" href="${url}" download="${esc(fname)}" style="text-align:center;text-decoration:none">이미지 저장</a>`}
@@ -1135,6 +1247,15 @@ async function act(a, v, el){
       });
       break;
     case 'sel': S.sel = v; S.pending = null; render(); break;
+    case 'view': S.view = v; render(); break;
+    case 'boardAdd': run('추가 중…', async () => { applyMe(await api('memberBoard', {tid:S.tid, token:S.token, mid:S.sel, eid:v, delta:1})); toast('스티커판을 한 장 추가했어요'); }); break;
+    case 'boardRemove': run('저장 중…', async () => { applyMe(await api('memberBoard', {tid:S.tid, token:S.token, mid:S.sel, eid:v, delta:-1})); }); break;
+    case 'attFilter': S.attFilter = v; render(); break;
+    case 'attend': {
+      const on = !(S.adm.attends||[]).some(x => x.eventId===S.evSel && x.memberId===v);
+      run('저장 중…', async () => { applyAdmin(await api('attendSet', {...A(), eid:S.evSel, mid:v, on})); toast(on ? '참여 체크했어요' : '참여 체크를 해제했어요'); });
+      break;
+    }
     case 'openBoard': S.sel = v; S.tab='board'; render(); window.scrollTo(0,0); break;
     case 'award':
       if (v === 'special' && !S.specialNote.trim()) { toast('특별 스티커는 칭찬 한마디를 적어 주세요'); document.getElementById('sn')?.focus(); return; }
@@ -1177,20 +1298,22 @@ async function act(a, v, el){
       run('저장 중…', async () => { applyAdmin(await api('eventSave', {...A(), ...f})); S.evForm = null; toast('행사를 저장했어요'); });
       break;
     }
-    case 'evPick': if (el.closest('button')) return; S.evSel = S.evSel === v ? null : v; render(); break;
+    case 'evPick': if (el.closest('button')) return; S.evSel = S.evSel === v ? null : v; S.attQ = ''; S.attFilter = 'elig'; render(); break;
     case 'evDelAsk': S.evDel = v; render(); break;
     case 'evDelNo': S.evDel = null; render(); break;
     case 'evDelYes': run('삭제 중…', async () => { applyAdmin(await api('eventDelete', {...A(), id:v})); S.evDel = null; if (S.evSel===v) S.evSel=null; toast('행사를 삭제했어요. 스티커 기록은 그대로예요'); }); break;
     case 'copyList': {
       const r = selEventRows(); if (!r) return;
-      const lines = r.groups.flatMap(g => g.members.filter(x=>x.sum>=r.e.goal).map(x => `${g.t.district}\t${g.t.name}\t${x.m.name}\t${x.sum}`));
-      try { await navigator.clipboard.writeText('지구\t선생님\t회원\t스티커\n' + lines.join('\n')); toast('명단을 복사했어요'); } catch { toast('복사할 수 없어요. 전체 CSV를 이용해 주세요'); }
+      const att = attendMap(r.e.id);
+      const lines = r.groups.flatMap(g => g.members.filter(x=>x.sum>=r.e.goal).map(x => `${g.t.district}\t${g.t.name}\t${x.m.name}\t${x.sum}\t${att[x.m.id]?'O':''}`));
+      try { await navigator.clipboard.writeText('지구\t선생님\t회원\t스티커\t참여\n' + lines.join('\n')); toast('명단을 복사했어요'); } catch { toast('복사할 수 없어요. 전체 CSV를 이용해 주세요'); }
       break;
     }
     case 'csv': {
       const r = selEventRows(); if (!r) return;
-      const head = ['지구','선생님','회원', ...r.weeks.map(w=>fmtMD(w)+'주'), '합계', '시상대상', '취소건수'];
-      const lines = r.groups.flatMap(g => g.members.map(x => [g.t.district, g.t.name, x.m.name, ...x.perW, x.sum, x.sum>=r.e.goal?'O':'', x.removed]));
+      const att = attendMap(r.e.id);
+      const head = ['지구','선생님','회원', ...r.weeks.map(w=>fmtMD(w)+'주'), '합계', '시상대상', '행사참여', '취소건수'];
+      const lines = r.groups.flatMap(g => g.members.map(x => [g.t.district, g.t.name, x.m.name, ...x.perW, x.sum, x.sum>=r.e.goal?'O':'', att[x.m.id]?'O':'', x.removed]));
       const csv = '﻿' + [head, ...lines].map(row => row.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
       fileSave(`${r.e.name}_${r.e.start}_${r.e.end}.csv`, csv, 'text/csv');
       break;
@@ -1241,7 +1364,7 @@ document.addEventListener('input', e => {
     else if (root === 'evForm') { S.evForm[sub] = v; if (e.target.type === 'date' || e.target.tagName === 'SELECT') render(); }
     else if (root === 'tForm') { S.tForm = S.tForm || {id:'', district:'', name:'', pin:''}; S.tForm[sub] = v; }
     else if (root === 'adForm') { S.adForm[sub] = v; }
-  } else { S[k] = v; if (k === 'recFilter' || k === 'aDistrict') render(); }
+  } else { S[k] = v; if (k === 'recFilter' || k === 'aDistrict' || k === 'attQ') render(); }
 });
 document.addEventListener('keydown', e => {
   if (e.key === 'Enter' && e.target.classList?.contains('evcard')) { act('evPick', e.target.dataset.v, e.target); return; }
