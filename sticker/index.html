@@ -1,0 +1,1258 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+</head>
+<body>
+<title>칭찬스티커판</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&family=Noto+Sans+KR:wght@400;500;700&display=swap">
+<style>
+/* Layout: 상단 알약 탭 + 720px 단일 컬럼. 파스텔 컬러 카드(연두·하늘·버터·핑크)로 영역을 구분. */
+:root{
+  --bg:#F3F8EC; --bg2:#E3F1D3; --surface:#FFFFFF; --sunk:#F1F6EA; --line:#E1EAD5;
+  --ink:#24321D; --muted:#6D7B64; --accent:#6DBB5A; --accent-ink:#FFFFFF; --accent-soft:#DDF0CF;
+  --sky:#D3EDF9; --sky-ink:#2A7CA5; --butter:#FFF2BF; --butter-ink:#94700C; --pink:#FDE0E6; --pink-ink:#C0425D;
+  --gold:#F6C744; --mint:#5DB8E5; --coral:#F2849B;
+  --ok:#3E9E4F; --warn:#C98A12; --bad:#D2455A;
+  --shadow:0 4px 18px rgba(70,110,40,.08);
+  --display:"Jua","Noto Sans KR",system-ui,sans-serif;
+  --body:"Noto Sans KR",system-ui,-apple-system,"Apple SD Gothic Neo",sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#131911; --bg2:#1B2617; --surface:#1E271A; --sunk:#253020; --line:#33412D;
+  --ink:#EAF2E2; --muted:#A3B29A; --accent:#8FD47B; --accent-ink:#13200E; --accent-soft:#2B3F24;
+  --sky:#1D3846; --sky-ink:#9AD6F2; --butter:#3B3317; --butter-ink:#F3D673; --pink:#43232B; --pink-ink:#F6A9B9;
+  --gold:#F6C744; --mint:#6CC4EC; --coral:#F58FA5;
+  --ok:#6FCF7E; --warn:#E8B44A; --bad:#F06B7F; --shadow:0 4px 18px rgba(0,0,0,.3); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#131911; --bg2:#1B2617; --surface:#1E271A; --sunk:#253020; --line:#33412D;
+  --ink:#EAF2E2; --muted:#A3B29A; --accent:#8FD47B; --accent-ink:#13200E; --accent-soft:#2B3F24;
+  --sky:#1D3846; --sky-ink:#9AD6F2; --butter:#3B3317; --butter-ink:#F3D673; --pink:#43232B; --pink-ink:#F6A9B9;
+  --gold:#F6C744; --mint:#6CC4EC; --coral:#F58FA5;
+  --ok:#6FCF7E; --warn:#E8B44A; --bad:#F06B7F; --shadow:0 4px 18px rgba(0,0,0,.3); color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg) linear-gradient(180deg,var(--bg2) 0,var(--bg) 360px) no-repeat;color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.55;margin:0;min-height:100vh}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg2)}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.wrap{max-width:720px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:8px 48px}
+h1,h2,h3{font-family:var(--display);font-weight:400;margin:0;text-wrap:balance;letter-spacing:.01em}
+h2{font-size:23px} h3{font-size:18px}
+.muted{color:var(--muted)} .small{font-size:13px}
+.num{font-variant-numeric:tabular-nums}
+
+/* top */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:color-mix(in srgb,var(--bg2) 88%,transparent);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+.top-in{max-width:720px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:12px 10px}
+.brand{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-bottom:10px}
+.brand h1{font-size:23px;display:flex;align-items:center;gap:8px}
+.brand h1 svg{width:30px;height:30px;padding:5px;background:var(--surface);border-radius:50%;box-shadow:var(--shadow)}
+.who{font-size:13px;color:var(--muted);display:flex;align-items:center;gap:10px;text-align:right;flex-wrap:wrap;justify-content:flex-end}
+.linkbtn{background:none;border:0;color:var(--accent);padding:4px 0;font-size:13px;font-weight:700}
+:root:not([data-theme="dark"]) .linkbtn{color:color-mix(in srgb,var(--accent) 70%,var(--ink))}
+.tabs{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;background:var(--surface);border-radius:999px;padding:5px;box-shadow:var(--shadow)}
+.tabs:empty{display:none}
+.tab{flex:1 0 auto;background:none;border:0;padding:9px 14px;font-weight:700;color:var(--muted);border-radius:999px;font-size:15px}
+.tab[aria-selected="true"]{background:var(--accent);color:var(--accent-ink)}
+.demo{background:var(--butter);color:var(--butter-ink);font-size:13px;font-weight:700;text-align:center;padding:6px 16px}
+
+/* generic */
+.card{background:var(--surface);border:0;border-radius:24px;padding:20px;box-shadow:var(--shadow)}
+.stack{display:flex;flex-direction:column;gap:14px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.between{justify-content:space-between}
+.field{display:flex;flex-direction:column;gap:6px;min-width:0;flex:1}
+.field label{font-size:13px;font-weight:700;color:var(--muted)}
+input[type=text],input[type=password],input[type=date],input[type=number],textarea,select{background:var(--sunk);border:1.5px solid transparent;border-radius:14px;padding:12px 14px;width:100%;min-width:0}
+input:focus,textarea:focus,select:focus{border-color:var(--accent);outline:none;background:var(--surface)}
+textarea{resize:vertical;min-height:64px}
+.btn{border:0;background:var(--sunk);border-radius:14px;padding:11px 18px;font-weight:700}
+.btn.primary{background:var(--accent);color:var(--accent-ink);box-shadow:0 4px 12px color-mix(in srgb,var(--accent) 35%,transparent)}
+.btn.danger{color:var(--pink-ink);background:var(--pink)}
+.btn:disabled{opacity:.45;cursor:not-allowed;box-shadow:none}
+.btn.sm{padding:7px 12px;font-size:13px;border-radius:10px}
+.seg{display:inline-flex;background:var(--sunk);border-radius:999px;padding:4px;flex-wrap:wrap}
+.seg button{border:0;background:none;padding:7px 16px;border-radius:999px;font-weight:700;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.pill{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px;background:var(--sunk);color:var(--muted);white-space:nowrap}
+.pill.ok{background:var(--accent-soft);color:var(--ok)}
+.pill.warn{background:var(--butter);color:var(--butter-ink)}
+.pill.bad{background:var(--pink);color:var(--pink-ink)}
+.notice{border-radius:14px;padding:12px 14px;background:var(--sunk);font-size:14px}
+.notice.bad{background:var(--pink);color:var(--pink-ink)}
+.empty{text-align:center;padding:28px 12px;color:var(--muted)}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:11px 20px;border-radius:999px;font-weight:700;z-index:40;font-size:14px;max-width:calc(100% - 32px);text-align:center}
+
+/* login */
+.tlist{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px}
+.tbtn{border:0;background:var(--sunk);border-radius:16px;padding:15px 10px;font-weight:700;text-align:center}
+.tbtn[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.pin{letter-spacing:.5em;text-align:center;font-size:22px;font-variant-numeric:tabular-nums}
+
+/* member chips */
+.chips{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 6px;scrollbar-width:thin}
+.chip{flex:0 0 auto;border:0;background:var(--surface);border-radius:999px;padding:9px 16px;font-weight:700;display:flex;gap:8px;align-items:center;box-shadow:var(--shadow)}
+.chip[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.chip .c{font-size:12px;padding:1px 7px;border-radius:999px;background:var(--sunk);color:var(--muted)}
+.chip[aria-pressed="true"] .c{background:color-mix(in srgb,var(--accent-ink) 25%,transparent);color:inherit}
+
+/* board */
+.board{background:linear-gradient(165deg,var(--accent-soft) 0,var(--surface) 46%);border-radius:28px;padding:20px;position:relative;overflow:hidden;box-shadow:var(--shadow)}
+.board-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap}
+.board-head h2{font-size:27px}
+.ring{--p:0;width:86px;height:86px;border-radius:50%;flex:0 0 auto;display:grid;place-items:center;background:conic-gradient(var(--accent) calc(var(--p) * 1%),color-mix(in srgb,var(--accent) 18%,var(--surface)) 0)}
+.ring span{width:68px;height:68px;border-radius:50%;background:var(--surface);display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1}
+.ring b{font-family:var(--display);font-weight:400;font-size:26px}
+.ring small{font-size:12px;color:var(--muted);font-weight:700;margin-top:2px}
+.count{font-family:var(--display);font-size:30px;line-height:1}
+.count small{font-size:16px;color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:9px}
+.grid.g50{grid-template-columns:repeat(10,1fr)}
+@media (max-width:520px){.grid.g50{grid-template-columns:repeat(5,1fr)}}
+.cell{aspect-ratio:1;max-width:100%;border-radius:50%;display:grid;place-items:center;background:var(--surface);border:2px dashed var(--line);color:var(--muted);font-size:12px;font-variant-numeric:tabular-nums}
+.cell.on{border:0;box-shadow:0 3px 8px rgba(0,0,0,.08)}
+.cell.on svg{width:56%;height:56%;fill:#fff}
+.cell.study{background:var(--gold)} .cell.write{background:var(--mint)} .cell.special{background:var(--coral)}
+.cell.new{animation:pop .55s cubic-bezier(.2,1.6,.4,1)}
+@keyframes pop{0%{transform:scale(.2) rotate(-30deg)}100%{transform:scale(1) rotate(0)}}
+.legend{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px;font-size:13px;color:var(--muted);font-weight:700}
+.legend span{display:inline-flex;align-items:center;gap:6px;background:var(--surface);padding:5px 12px 5px 8px;border-radius:999px}
+.dot{width:12px;height:12px;border-radius:50%;display:inline-block}
+.done-banner{margin-top:14px;text-align:center;font-family:var(--display);font-size:22px;color:var(--pink-ink);background:var(--pink);border-radius:16px;padding:10px}
+.sample-tag{position:absolute;top:14px;right:14px;background:var(--surface)}
+
+/* award panel */
+.week{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.meter{display:flex;gap:4px}
+.meter i{width:22px;height:10px;border-radius:5px;background:var(--sunk)}
+.meter i.f{background:var(--accent)}
+.agroup{border-radius:20px;padding:14px;display:flex;flex-direction:column;gap:10px;background:var(--sunk)}
+.agroup.study{background:var(--butter)} .agroup.write{background:var(--sky)} .agroup.special{background:var(--pink)}
+.agroup.study .ahead .small{color:var(--butter-ink)} .agroup.write .ahead .small{color:var(--sky-ink)} .agroup.special .ahead .small{color:var(--pink-ink)}
+.agroup textarea{background:var(--surface)}
+.agroup.special > .btn{background:var(--surface);color:var(--pink-ink)}
+.ahead{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.ahead h3{display:flex;align-items:center;gap:8px}
+.abtns{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.abtn{border:0;background:var(--surface);border-radius:16px;padding:13px 14px;text-align:left;display:flex;flex-direction:column;gap:2px;box-shadow:0 2px 6px rgba(0,0,0,.04)}
+.abtn b{font-size:16px}
+.abtn span{font-size:12px;color:var(--muted)}
+.abtn:disabled{opacity:.45;cursor:not-allowed;box-shadow:none}
+.abtn:not(:disabled):hover{transform:translateY(-1px)}
+.confirm{position:sticky;bottom:calc(12px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);border-radius:20px;padding:14px 16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;box-shadow:0 10px 28px rgba(0,0,0,.22);z-index:4}
+.confirm p{margin:0;flex:1;min-width:180px;font-weight:700}
+.confirm .btn:not(.primary){background:color-mix(in srgb,var(--bg) 18%,transparent);color:var(--bg)}
+
+/* lists */
+.list{display:flex;flex-direction:column}
+.li{display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid var(--line);flex-wrap:wrap}
+.li:first-child{border-top:0}
+.li .main{flex:1;min-width:140px}
+.li .main b{display:block}
+.ico{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;flex:0 0 auto}
+.ico svg{width:58%;height:58%;fill:#fff}
+.ico.sm{width:28px;height:28px}
+.ico.study{background:var(--gold)} .ico.write{background:var(--mint)} .ico.special{background:var(--coral)}
+.li.del{opacity:.5}
+.li.del b{text-decoration:line-through}
+
+/* admin */
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+@media (max-width:560px){.tiles{grid-template-columns:repeat(2,1fr)}}
+.tile{border-radius:20px;padding:16px;background:var(--surface)}
+.tiles .tile:nth-child(1){background:var(--accent-soft)}
+.tiles .tile:nth-child(2){background:var(--sky)}
+.tiles .tile:nth-child(3){background:var(--butter)}
+.tiles .tile:nth-child(4){background:var(--pink)}
+.tile b{display:block;font-family:var(--display);font-size:30px;font-weight:400;font-variant-numeric:tabular-nums;margin-top:2px}
+.tile span{font-size:12px;color:var(--muted);font-weight:700}
+.tablewrap{overflow-x:auto;border-radius:20px;background:var(--surface);box-shadow:var(--shadow)}
+table{border-collapse:collapse;width:100%;font-size:14px;min-width:560px}
+th,td{padding:11px 12px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
+th{font-size:12px;color:var(--muted);font-weight:700;background:var(--accent-soft);border-bottom:0}
+tr:last-child td{border-bottom:0}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+tr.trow{cursor:pointer}
+tr.trow:hover td{background:var(--sunk)}
+tr.sub td{background:var(--sunk);font-size:13px}
+.heat{display:flex;gap:3px}
+.heat i{width:24px;height:22px;border-radius:6px;display:grid;place-items:center;font-style:normal;font-size:11px;font-weight:700;background:var(--sunk);color:var(--muted);font-variant-numeric:tabular-nums}
+tr.sub .heat i{background:var(--surface)}
+.heat i.h1{background:color-mix(in srgb,var(--accent) 28%,var(--surface));color:var(--ink)}
+.heat i.h2{background:color-mix(in srgb,var(--accent) 60%,var(--surface));color:var(--ink)}
+.heat i.h3,tr.sub .heat i.h3{background:var(--accent);color:var(--accent-ink)}
+tr.sub .heat i.h1{background:color-mix(in srgb,var(--accent) 28%,var(--surface))}
+tr.sub .heat i.h2{background:color-mix(in srgb,var(--accent) 60%,var(--surface))}
+.heat i.fut,tr.sub .heat i.fut{background:transparent;border:1px dashed var(--line)}
+.wkhead{display:flex;gap:3px}
+.wkhead i{width:24px;font-style:normal;font-size:10px;text-align:center;color:var(--muted)}
+
+.modal{position:fixed;inset:0;background:rgba(20,30,15,.55);z-index:30;display:grid;place-items:center;padding:16px}
+.modal-in{background:var(--surface);border-radius:24px;padding:18px;max-width:440px;width:100%;max-height:calc(100% - 32px);overflow:auto;display:flex;flex-direction:column;gap:12px}
+.modal-in img{border-radius:16px;width:100%;display:block}
+.busy{position:fixed;inset:0;z-index:35;background:color-mix(in srgb,var(--bg) 40%,transparent);display:grid;place-items:center;cursor:progress}
+.busy span{background:var(--surface);padding:10px 20px;border-radius:999px;font-weight:700;font-size:14px;box-shadow:var(--shadow)}
+/* events */
+.evlist{display:flex;flex-direction:column;gap:10px}
+.evcard{background:var(--surface);border-radius:20px;padding:16px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:8px;cursor:pointer;border:2px solid transparent;text-align:left}
+.evcard[aria-pressed="true"]{border-color:var(--accent)}
+.evcard .row{gap:6px}
+.evcard h3{font-size:19px}
+.pill.scope-all{background:var(--accent);color:var(--accent-ink)}
+.pill.scope-d{background:var(--sky);color:var(--sky-ink)}
+.pill.live{background:var(--accent-soft);color:var(--ok)}
+.pill.soon{background:var(--butter);color:var(--butter-ink)}
+.evbanner{border-radius:20px;padding:14px 16px;background:linear-gradient(120deg,var(--butter),var(--pink));display:flex;flex-direction:column;gap:8px}
+.evbanner .bar{height:10px;border-radius:5px;background:color-mix(in srgb,var(--surface) 70%,transparent);overflow:hidden}
+.evbanner .bar i{display:block;height:100%;background:var(--accent);border-radius:5px}
+.evbanner .pill:not(.scope-all):not(.scope-d){background:var(--surface)}
+.sec-title{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.group-h{font-size:13px;font-weight:700;color:var(--muted);padding:12px 0 2px}
+@media (prefers-reduced-motion:reduce){.cell.new{animation:none}.abtn:hover{transform:none}}
+</style>
+
+<header class="top">
+  <div id="demoBar"></div>
+  <div class="top-in">
+    <div class="brand">
+      <h1><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="var(--gold)" d="M12 2.5l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.3l-5.8 3.1 1.1-6.5L2.6 9.3l6.5-.9z"/></svg>칭찬스티커판</h1>
+      <div class="who" id="who"></div>
+    </div>
+    <nav class="tabs" id="tabs" role="tablist"></nav>
+  </div>
+</header>
+<main class="wrap" id="app"><div class="empty">불러오는 중…</div></main>
+<div id="layer"></div>
+<script>
+/* ============================================================
+   설정: 구글 앱스스크립트 웹 앱 URL을 아래 따옴표 안에 붙여넣으세요.
+   비워두면 '체험 모드'로 동작해요 (이 기기 브라우저에만 저장).
+   ============================================================ */
+const API_URL = '';   // 예) 'https://script.google.com/macros/s/....../exec'
+</script>
+<script>
+// ===== 칭찬스티커판 공통 로직 (앱스스크립트 · 체험모드 공용) =====
+function makeCore(st) {
+  var WEEK_MAX = 6;
+  var CAT = {
+    study2: { g: 'study', n: 2 }, study1: { g: 'study', n: 1 },
+    write2: { g: 'write', n: 2 }, write1: { g: 'write', n: 1 },
+    special: { g: 'special', n: 1 }
+  };
+  var H9 = 9 * 3600e3;
+  function pad(n) { return String(n).padStart(2, '0'); }
+  function kstDate(ts) { var d = new Date(ts + H9); return d.getUTCFullYear() + '-' + pad(d.getUTCMonth() + 1) + '-' + pad(d.getUTCDate()); }
+  function mondayOf(ymd) {
+    var p = ymd.split('-').map(Number); var t = Date.UTC(p[0], p[1] - 1, p[2]);
+    var dow = (new Date(t).getUTCDay() + 6) % 7; var m = new Date(t - dow * 864e5);
+    return m.getUTCFullYear() + '-' + pad(m.getUTCMonth() + 1) + '-' + pad(m.getUTCDate());
+  }
+  function weekKey(ts) { return mondayOf(kstDate(ts)); }
+  function rid(p) { return p + Math.random().toString(36).slice(2, 8) + Date.now().toString(36).slice(-5); }
+  function fail(m) { throw new Error(m); }
+  function clean(s, max) { return String(s == null ? '' : s).replace(/[\u0000-\u001f]/g, '').trim().slice(0, max); }
+  function isActive(o) { return !(o.active === false || o.active === 'false' || o.active === 'FALSE'); }
+  function isYmd(s) { return /^\d{4}-\d{2}-\d{2}$/.test(String(s || '')); }
+  function tok(s) { return st.hmac(s); }
+  function byId(sheet, id) { return st.all(sheet).filter(function (x) { return x.id === id; })[0]; }
+
+  function pubT(t) { return { id: t.id, district: String(t.district), name: String(t.name), active: isActive(t), createdAt: +t.createdAt || 0 }; }
+  function pubE(e) { return { id: e.id, name: String(e.name), scope: String(e.scope || 'all'), start: String(e.start), end: String(e.end), goal: +e.goal || 30, createdBy: String(e.createdBy || ''), createdAt: +e.createdAt || 0 }; }
+  function events() { return st.all('Events').filter(isActive).map(pubE).sort(function (a, b) { return a.start < b.start ? 1 : a.start > b.start ? -1 : 0; }); }
+
+  function memberViews(members, awards) {
+    var by = {};
+    awards.forEach(function (a) { (by[a.memberId] = by[a.memberId] || []).push(a); });
+    return members.map(function (m) {
+      var mine = by[m.id] || [];
+      var map = function (a) { var o = { id: a.id, cat: a.cat, note: String(a.note || ''), at: +a.at, wk: String(a.wk) }; if (a.status === 'cancel') o.delAt = +a.delAt; return o; };
+      return {
+        id: m.id, teacherId: m.teacherId, name: String(m.name), size: +m.size === 50 ? 50 : 30, active: isActive(m),
+        awards: mine.filter(function (a) { return a.status !== 'cancel'; }).map(map),
+        removed: mine.filter(function (a) { return a.status === 'cancel'; }).map(map)
+      };
+    });
+  }
+  function mePayload(t) {
+    var aw = st.all('Awards').filter(function (a) { return a.teacherId === t.id; });
+    var ms = st.all('Members').filter(function (m) { return m.teacherId === t.id; });
+    var today = kstDate(Date.now());
+    var evs = events().filter(function (e) { return (e.scope === 'all' || e.scope === String(t.district)) && e.end >= today; });
+    return { teacher: pubT(t), members: memberViews(ms, aw), events: evs, now: Date.now() };
+  }
+  function teacherToken(t) { return tok('t:' + t.id + ':' + (t.pinHash || '')); }
+  function teacherAuth(r) {
+    var t = byId('Teachers', r.tid);
+    if (!t || !isActive(t)) fail('선생님 정보를 찾을 수 없어요. 다시 로그인해 주세요.');
+    if (r.token !== teacherToken(t)) fail('로그인이 만료됐어요. 다시 로그인해 주세요.');
+    return t;
+  }
+  function adminToken(a) { return a.id === 'master' ? tok('admin:master:' + st.adminPw()) : tok('admin:' + a.id + ':' + a.pwHash); }
+  function adminAuth(r, masterOnly) {
+    var a;
+    if (r.aid === 'master') { if (!st.adminPw()) fail('마스터 비밀번호가 설정되지 않았어요.'); a = { id: 'master', name: '마스터', master: true }; }
+    else { var x = byId('Admins', r.aid); if (!x || !isActive(x)) fail('관리자 로그인이 필요해요.'); a = { id: x.id, name: String(x.name), pwHash: x.pwHash, master: false }; }
+    if (r.atoken !== adminToken(a)) fail('관리자 로그인이 필요해요.');
+    if (masterOnly && !a.master) fail('마스터 관리자만 할 수 있어요.');
+    return a;
+  }
+  function adminPayload(a) {
+    var out = {
+      me: { id: a.id, name: a.name, master: a.master },
+      teachers: st.all('Teachers').map(pubT),
+      members: memberViews(st.all('Members'), st.all('Awards')),
+      events: events(), now: Date.now()
+    };
+    if (a.master) out.admins = st.all('Admins').filter(isActive).map(function (x) { return { id: x.id, name: String(x.name), createdAt: +x.createdAt || 0 }; });
+    return out;
+  }
+
+  return {
+    init: function () {
+      return {
+        teachers: st.all('Teachers').filter(isActive).map(pubT),
+        admins: [{ id: 'master', name: '마스터' }].concat(st.all('Admins').filter(isActive).map(function (x) { return { id: x.id, name: String(x.name) }; })),
+        now: Date.now()
+      };
+    },
+
+    login: function (r) {
+      var pin = String(r.pin || '');
+      if (!/^\d{4}$/.test(pin)) fail('PIN 숫자 4자리를 입력해 주세요.');
+      var t = byId('Teachers', r.tid);
+      if (!t || !isActive(t)) fail('선생님 정보를 찾을 수 없어요.');
+      if (st.hash(t.id + ':' + pin) !== t.pinHash) fail('PIN이 맞지 않아요. 잊었다면 관리자에게 문의하세요.');
+      var p = mePayload(t); p.token = teacherToken(t); return p;
+    },
+
+    me: function (r) { return mePayload(teacherAuth(r)); },
+
+    memberAdd: function (r) {
+      var t = teacherAuth(r);
+      var name = clean(r.name, 10); if (!name) fail('아이 이름을 입력해 주세요.');
+      var size = +r.size === 50 ? 50 : 30;
+      return st.locked(function () {
+        if (st.all('Members').some(function (m) { return m.teacherId === t.id && String(m.name) === name && isActive(m); })) fail('같은 이름의 회원이 있어요.');
+        st.append('Members', { id: rid('m'), teacherId: t.id, name: name, size: size, active: true, createdAt: Date.now() });
+        return mePayload(t);
+      });
+    },
+
+    memberActive: function (r) {
+      var t = teacherAuth(r);
+      return st.locked(function () {
+        var m = st.all('Members').filter(function (x) { return x.id === r.mid && x.teacherId === t.id; })[0];
+        if (!m) fail('회원을 찾을 수 없어요.');
+        m.active = !!r.active; st.update('Members', m);
+        return mePayload(t);
+      });
+    },
+
+    award: function (r) {
+      var t = teacherAuth(r);
+      var c = CAT[r.cat]; if (!c) fail('스티커 종류가 올바르지 않아요.');
+      var note = clean(r.note, 60);
+      if (r.cat === 'special' && !note) fail('특별 스티커는 칭찬 한마디가 필요해요.');
+      return st.locked(function () {
+        var m = st.all('Members').filter(function (x) { return x.id === r.mid && x.teacherId === t.id; })[0];
+        if (!m) fail('회원을 찾을 수 없어요.');
+        var now = Date.now(), wk = weekKey(now);
+        var list = st.all('Awards').filter(function (a) { return a.memberId === m.id && String(a.wk) === wk && a.status !== 'cancel'; });
+        var used = list.reduce(function (s, a) { return s + (+a.n || 0); }, 0);
+        if (c.g !== 'special' && list.some(function (a) { return CAT[a.cat] && CAT[a.cat].g === c.g; })) fail('이번 주에 이미 지급한 스티커예요.');
+        if (r.cat === 'special' && list.filter(function (a) { return a.cat === 'special'; }).length >= 2) fail('특별 스티커는 주 2개까지예요.');
+        if (used + c.n > WEEK_MAX) fail('이번 주 최대 ' + WEEK_MAX + '개를 모두 받았어요.');
+        st.append('Awards', { id: rid('a'), memberId: m.id, teacherId: t.id, cat: r.cat, n: c.n, note: note, at: now, wk: wk, status: 'ok', delAt: '' });
+        return mePayload(t);
+      });
+    },
+
+    cancel: function (r) {
+      var t = teacherAuth(r);
+      return st.locked(function () {
+        var a = st.all('Awards').filter(function (x) { return x.id === r.aid && x.teacherId === t.id; })[0];
+        if (!a) fail('기록을 찾을 수 없어요.');
+        if (a.status !== 'cancel') { a.status = 'cancel'; a.delAt = Date.now(); st.update('Awards', a); }
+        return mePayload(t);
+      });
+    },
+
+    // ---------- 관리자 ----------
+    adminLogin: function (r) {
+      var pw = String(r.pw || ''), a;
+      if (r.aid === 'master') {
+        if (!st.adminPw()) fail('마스터 비밀번호가 설정되지 않았어요. Code.gs 맨 위에서 설정해 주세요.');
+        if (pw !== st.adminPw()) fail('비밀번호가 맞지 않아요.');
+        a = { id: 'master', name: '마스터', master: true };
+      } else {
+        var x = byId('Admins', r.aid);
+        if (!x || !isActive(x)) fail('관리자 정보를 찾을 수 없어요.');
+        if (st.hash('admin:' + x.id + ':' + pw) !== x.pwHash) fail('비밀번호가 맞지 않아요.');
+        a = { id: x.id, name: String(x.name), pwHash: x.pwHash, master: false };
+      }
+      var p = adminPayload(a); p.atoken = adminToken(a); p.aid = a.id; return p;
+    },
+
+    admin: function (r) { return adminPayload(adminAuth(r)); },
+
+    teacherSave: function (r) {
+      var a = adminAuth(r, true);
+      var district = clean(r.district, 20), name = clean(r.name, 12), pin = String(r.pin || '');
+      if (!district) fail('지구명을 입력해 주세요.');
+      if (!name) fail('교사명을 입력해 주세요.');
+      if (pin && !/^\d{4}$/.test(pin)) fail('PIN은 숫자 4자리예요.');
+      return st.locked(function () {
+        var dup = st.all('Teachers').some(function (t) { return t.id !== r.id && isActive(t) && String(t.district) === district && String(t.name) === name; });
+        if (dup) fail('같은 지구에 같은 이름이 이미 있어요.');
+        if (r.id) {
+          var t = byId('Teachers', r.id); if (!t) fail('선생님 정보를 찾을 수 없어요.');
+          t.district = district; t.name = name; if (pin) t.pinHash = st.hash(t.id + ':' + pin);
+          st.update('Teachers', t);
+        } else {
+          if (!pin) fail('처음 등록할 때는 PIN 4자리를 정해 주세요.');
+          var id = rid('t');
+          st.append('Teachers', { id: id, district: district, name: name, pinHash: st.hash(id + ':' + pin), createdAt: Date.now(), active: true });
+        }
+        return adminPayload(a);
+      });
+    },
+
+    teacherActive: function (r) {
+      var a = adminAuth(r, true);
+      return st.locked(function () {
+        var t = byId('Teachers', r.tid); if (!t) fail('선생님 정보를 찾을 수 없어요.');
+        t.active = !!r.active; st.update('Teachers', t);
+        return adminPayload(a);
+      });
+    },
+
+    adminAdd: function (r) {
+      var a = adminAuth(r, true);
+      var name = clean(r.name, 12), pw = String(r.pw || '');
+      if (!name) fail('관리자 이름을 입력해 주세요.');
+      if (pw.length < 4) fail('비밀번호는 4자 이상으로 정해 주세요.');
+      return st.locked(function () {
+        if (name === '마스터' || st.all('Admins').some(function (x) { return isActive(x) && String(x.name) === name; })) fail('같은 이름의 관리자가 있어요.');
+        var id = rid('ad');
+        st.append('Admins', { id: id, name: name, pwHash: st.hash('admin:' + id + ':' + pw), createdAt: Date.now(), active: true });
+        return adminPayload(a);
+      });
+    },
+
+    adminRemove: function (r) {
+      var a = adminAuth(r, true);
+      return st.locked(function () {
+        var x = byId('Admins', r.id); if (!x) fail('관리자 정보를 찾을 수 없어요.');
+        x.active = false; st.update('Admins', x);
+        return adminPayload(a);
+      });
+    },
+
+    eventSave: function (r) {
+      var a = adminAuth(r);
+      var name = clean(r.name, 30); if (!name) fail('행사 이름을 입력해 주세요.');
+      var scope = clean(r.scope, 20) || 'all';
+      if (!isYmd(r.start) || !isYmd(r.end) || r.start > r.end) fail('행사 기간을 확인해 주세요.');
+      var goal = Math.max(1, Math.min(300, parseInt(r.goal, 10) || 30));
+      return st.locked(function () {
+        if (r.id) {
+          var e = byId('Events', r.id); if (!e) fail('행사를 찾을 수 없어요.');
+          e.name = name; e.scope = scope; e.start = r.start; e.end = r.end; e.goal = goal;
+          st.update('Events', e);
+        } else {
+          st.append('Events', { id: rid('e'), name: name, scope: scope, start: r.start, end: r.end, goal: goal, createdBy: a.name, createdAt: Date.now(), active: true });
+        }
+        return adminPayload(a);
+      });
+    },
+
+    eventDelete: function (r) {
+      var a = adminAuth(r);
+      return st.locked(function () {
+        var e = byId('Events', r.id); if (!e) fail('행사를 찾을 수 없어요.');
+        e.active = false; st.update('Events', e);
+        return adminPayload(a);
+      });
+    }
+  };
+}
+
+</script>
+<script>
+(() => {
+const DEMO = !API_URL || API_URL.indexOf('__API') === 0;
+const DEMO_PW = 'demo1234';
+const ICON = {
+  study:'M12 2.5l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.3l-5.8 3.1 1.1-6.5L2.6 9.3l6.5-.9z',
+  write:'M4 17.2V20h2.8l9.9-9.9-2.8-2.8L4 17.2zM19.7 7.1a1 1 0 000-1.4l-1.4-1.4a1 1 0 00-1.4 0l-1.3 1.3 2.8 2.8 1.3-1.3z',
+  special:'M12 20.5s-7.5-4.6-9.3-9.2C1.4 8 3.6 4.5 7.1 4.5c2 0 3.4 1 4.9 2.8 1.5-1.8 2.9-2.8 4.9-2.8 3.5 0 5.7 3.5 4.4 6.8-1.8 4.6-9.3 9.2-9.3 9.2z'
+};
+const CAT = {
+  study2:{g:'study',n:2,label:'교재풀이 퍼펙트',short:'퍼펙트'},
+  study1:{g:'study',n:1,label:'교재풀이 조금 밀렸어요',short:'조금 밀렸어요'},
+  write2:{g:'write',n:2,label:'글씨를 정성껏 썼어요',short:'정성껏'},
+  write1:{g:'write',n:1,label:'조금 미흡하지만 노력해요',short:'노력해요'},
+  special:{g:'special',n:1,label:'오늘의 특별 스티커',short:'특별'}
+};
+const WEEK_MAX = 6, RECENT_WEEKS = 8;
+const svg = g => `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${ICON[g]}"/></svg>`;
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+// ---------- dates (KST) ----------
+const H9 = 9*3600e3, pad = n => String(n).padStart(2,'0');
+const kstDate = ts => { const d = new Date(ts + H9); return `${d.getUTCFullYear()}-${pad(d.getUTCMonth()+1)}-${pad(d.getUTCDate())}`; };
+const mondayOf = ymd => { const [y,m,d] = ymd.split('-').map(Number); const t = Date.UTC(y,m-1,d); const dow = (new Date(t).getUTCDay()+6)%7; const mt = new Date(t - dow*864e5); return `${mt.getUTCFullYear()}-${pad(mt.getUTCMonth()+1)}-${pad(mt.getUTCDate())}`; };
+const weekKey = ts => mondayOf(kstDate(ts));
+const addDays = (ymd,n) => { const [y,m,d] = ymd.split('-').map(Number); const t = new Date(Date.UTC(y,m-1,d) + n*864e5); return `${t.getUTCFullYear()}-${pad(t.getUTCMonth()+1)}-${pad(t.getUTCDate())}`; };
+const fmtMD = ymd => { const [,m,d] = ymd.split('-'); return `${+m}/${+d}`; };
+const fmtTime = ts => { const d = new Date(ts + H9); return `${d.getUTCMonth()+1}/${d.getUTCDate()} ${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}`; };
+const weeksBetween = (s,e) => { const out=[]; let w = mondayOf(s); while (w <= e) { out.push(w); w = addDays(w,7); } return out; };
+const today = () => kstDate(Date.now());
+
+const ls = { get(k){ try { return localStorage.getItem(k); } catch { return null; } }, set(k,v){ try { v==null ? localStorage.removeItem(k) : localStorage.setItem(k,v); } catch {} } };
+const lsJSON = k => { try { return JSON.parse(ls.get(k)||'null'); } catch { return null; } };
+
+// ---------- API ----------
+let demoApi = null;
+function demoCore(){
+  if (demoApi) return demoApi;
+  const h = s => { let x = 2166136261; for (let i=0;i<s.length;i++){ x ^= s.charCodeAt(i); x = Math.imul(x,16777619); } return (x>>>0).toString(16); };
+  let mem = lsJSON('stk_demo2');
+  if (!mem) {
+    const now = Date.now();
+    mem = {Teachers:[
+      {id:'t_demo1', district:'내외지구', name:'김민지', pinHash:h('ht_demo1:1234'), createdAt:now, active:true},
+      {id:'t_demo2', district:'중앙지구', name:'이수진', pinHash:h('ht_demo2:1234'), createdAt:now, active:true}
+    ], Members:[], Awards:[], Admins:[], Events:[]};
+  }
+  const save = () => ls.set('stk_demo2', JSON.stringify(mem));
+  const st = {
+    all: n => mem[n].map(o => ({...o})),
+    append: (n,o) => { mem[n].push({...o}); save(); },
+    update: (n,o) => { const i = mem[n].findIndex(x=>x.id===o.id); if (i>=0) { mem[n][i] = {...o}; save(); } },
+    locked: fn => fn(),
+    hash: s => h('h'+s), hmac: s => h('k'+s),
+    adminPw: () => DEMO_PW
+  };
+  return (demoApi = makeCore(st));
+}
+async function api(action, payload = {}){
+  const req = {action, ...payload};
+  if (DEMO) {
+    await new Promise(r => setTimeout(r, 120));
+    const fn = demoCore()[action]; if (!fn) throw new Error('알 수 없는 요청이에요.');
+    return JSON.parse(JSON.stringify(fn(req)));
+  }
+  let res;
+  try { res = await fetch(API_URL, {method:'POST', body: JSON.stringify(req)}); }
+  catch { throw new Error('서버에 연결하지 못했어요. 인터넷 연결을 확인해 주세요.'); }
+  let data; try { data = await res.json(); } catch { throw new Error('서버 응답을 읽지 못했어요. 앱스스크립트 배포 설정을 확인해 주세요.'); }
+  if (!data.ok) throw new Error(data.error || '요청을 처리하지 못했어요.');
+  return data;
+}
+
+// ---------- state ----------
+const sess = lsJSON('stk_sess'), asess = lsJSON('stk_asess');
+const S = {
+  teachers: [], admins: [], loaded:false, loadErr:'',
+  mode: null,
+  tid: sess?.tid || null, token: sess?.token || null, teacher: null, members: [], tevents: [],
+  aid: asess?.aid || null, atoken: asess?.atoken || null, adm: null,
+  tab: 'board', atab: 'recent', sel: null,
+  login: {mode:'pick', district:'', pick:null, pin:'', apick:'master', pw:'', err:''},
+  pending: null, specialNote:'', newCells:0, busy:false,
+  addName:'', addSize:30, recFilter:'all', delConfirm:null,
+  open:{}, aDistrict:'all', evSel:null, evForm:null, evDel:null,
+  tForm:null, tConfirm:null, adForm:{name:'', pw:''}, adDel:null
+};
+const app = document.getElementById('app'), tabsEl = document.getElementById('tabs'), whoEl = document.getElementById('who'), layer = document.getElementById('layer');
+if (DEMO) document.getElementById('demoBar').innerHTML = `<div class="demo">체험 모드 · 이 기기에만 저장 · 마스터 비밀번호 ${DEMO_PW} · 예시 선생님 PIN 1234</div>`;
+
+let toastTimer;
+function toast(msg){
+  layer.querySelector('.toast')?.remove();
+  const t = document.createElement('div'); t.className='toast'; t.textContent = msg; layer.appendChild(t);
+  clearTimeout(toastTimer); toastTimer = setTimeout(()=>t.remove(), 2600);
+}
+function setBusy(on, label='저장 중…'){
+  S.busy = on;
+  layer.querySelector('.busy')?.remove();
+  if (on) { const b = document.createElement('div'); b.className='busy'; b.innerHTML = `<span>${esc(label)}</span>`; layer.appendChild(b); }
+}
+async function run(label, fn){
+  if (S.busy) return;
+  setBusy(true, label);
+  try { await fn(); }
+  catch(e){
+    const msg = e.message || '문제가 생겼어요';
+    if (/로그인이 만료|선생님 정보를 찾을 수 없어요. 다시/.test(msg)) teacherOut();
+    if (/관리자 로그인이 필요/.test(msg)) adminOut();
+    toast(msg);
+  }
+  finally { setBusy(false); render(); }
+}
+
+// ---------- derived ----------
+const tLabel = t => t ? `${t.district} · ${t.name}` : '';
+const activeMembers = () => S.members.filter(m => m.active).sort((a,b)=>a.name.localeCompare(b.name,'ko'));
+const total = m => m.awards.reduce((s,a)=>s + (CAT[a.cat]?.n||0), 0);
+const sumIn = (m, s, e) => m.awards.filter(a => { const d = kstDate(a.at); return d >= s && d <= e; }).reduce((x,a)=>x+(CAT[a.cat]?.n||0),0);
+function weekState(m, wk){
+  const list = m.awards.filter(a => a.wk === wk);
+  return {
+    study: list.find(a => CAT[a.cat]?.g === 'study'),
+    write: list.find(a => CAT[a.cat]?.g === 'write'),
+    specials: list.filter(a => a.cat === 'special'),
+    used: list.reduce((s,a)=>s+(CAT[a.cat]?.n||0),0)
+  };
+}
+function boardCells(m){
+  const size = m.size || 30, seq = [];
+  [...m.awards].sort((a,b)=>a.at-b.at).forEach(a => { for (let i=0;i<(CAT[a.cat]?.n||0);i++) seq.push(CAT[a.cat].g); });
+  const tot = seq.length, boardsDone = Math.floor(tot/size);
+  let start, full = false;
+  if (tot > 0 && tot % size === 0) { start = tot - size; full = true; } else start = boardsDone * size;
+  return {size, cur: seq.slice(start, start+size), tot, boardNo: Math.floor(start/size)+1, full, boardsDone};
+}
+const uniq = a => [...new Set(a)].sort((x,y)=>x.localeCompare(y,'ko'));
+const scopeLabel = sc => sc === 'all' ? '지국 전체' : sc;
+const scopePill = sc => `<span class="pill ${sc==='all'?'scope-all':'scope-d'}">${esc(scopeLabel(sc))}</span>`;
+function evStatus(e){ const t = today(); return t < e.start ? 'soon' : t > e.end ? 'done' : 'live'; }
+const statusPill = e => { const s = evStatus(e); return s==='live' ? '<span class="pill live">진행 중</span>' : s==='soon' ? '<span class="pill soon">예정</span>' : '<span class="pill">종료</span>'; };
+
+// ---------- session ----------
+function applyMe(d){
+  S.teacher = d.teacher; S.members = d.members || []; S.tevents = d.events || [];
+  if (d.token) { S.token = d.token; S.tid = d.teacher.id; ls.set('stk_sess', JSON.stringify({tid:S.tid, token:S.token})); }
+  S.mode = 'teacher';
+}
+function applyAdmin(d){
+  S.adm = d;
+  if (d.atoken) { S.atoken = d.atoken; S.aid = d.aid; ls.set('stk_asess', JSON.stringify({aid:S.aid, atoken:S.atoken})); }
+  S.mode = 'admin';
+  if (!d.me.master && (S.atab === 'teachers' || S.atab === 'admins')) S.atab = 'recent';
+}
+function teacherOut(){
+  if (S.teacher) S.login.district = S.teacher.district;
+  S.mode = null; S.tid = null; S.token = null; S.teacher = null; S.members = []; S.tevents = []; S.pending = null;
+  ls.set('stk_sess', null); S.login.pick = null; S.login.pin = ''; S.login.err = '';
+}
+function adminOut(){ S.atoken = null; S.aid = null; S.adm = null; ls.set('stk_asess', null); if (S.mode==='admin') S.mode = null; S.login.mode = 'pick'; S.login.pw=''; S.login.err=''; }
+
+async function boot(){
+  try {
+    const d = await api('init'); S.teachers = d.teachers; S.admins = d.admins; S.loaded = true;
+    if (S.tid && S.token) { try { applyMe(await api('me', {tid:S.tid, token:S.token})); } catch { teacherOut(); } }
+    else if (S.atoken) { try { applyAdmin(await api('admin', {aid:S.aid, atoken:S.atoken})); } catch { adminOut(); } }
+  } catch(e){ S.loadErr = e.message; }
+  render();
+}
+async function refresh(){
+  try {
+    if (S.mode === 'teacher') applyMe(await api('me', {tid:S.tid, token:S.token}));
+    else if (S.mode === 'admin') applyAdmin(await api('admin', {aid:S.aid, atoken:S.atoken}));
+    render();
+  } catch(e){ toast(e.message); }
+}
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && S.mode && !S.busy && !S.pending) refresh(); });
+const A = () => ({aid:S.aid, atoken:S.atoken});
+
+// ---------- render ----------
+function render(){
+  if (S.loadErr) { tabsEl.innerHTML=''; whoEl.innerHTML=''; app.innerHTML = `<div class="card stack"><div class="notice bad">${esc(S.loadErr)}</div><button class="btn" data-act="reload">다시 시도</button></div>`; return; }
+  if (!S.loaded) return;
+  renderTop();
+  let html;
+  if (S.mode === 'teacher') html = S.tab === 'members' ? membersView() : S.tab === 'records' ? recordsView() : boardView();
+  else if (S.mode === 'admin') html = S.atab === 'events' ? eventsView() : S.atab === 'teachers' ? teachersView() : S.atab === 'admins' ? adminsView() : recentView();
+  else html = S.login.mode === 'admin' ? adminLoginView() : loginView();
+  const ae = document.activeElement; const fid = ae && ae.id && app.contains(ae) ? ae.id : null;
+  const selr = fid && 'selectionStart' in ae ? [ae.selectionStart, ae.selectionEnd] : null;
+  app.innerHTML = html;
+  if (fid) { const n = document.getElementById(fid); if (n && !n.disabled) { n.focus(); try { selr && n.setSelectionRange(selr[0], selr[1]); } catch {} } }
+  S.newCells = 0;
+}
+function renderTop(){
+  let tabs = [];
+  if (S.mode === 'teacher') {
+    tabs = [['board','스티커판'],['members','내 회원'],['records','기록']].map(([k,l]) => `<button class="tab" role="tab" aria-selected="${S.tab===k}" data-act="tab" data-v="${k}">${l}</button>`);
+    whoEl.innerHTML = `<span>${esc(tLabel(S.teacher))} 선생님</span><button class="linkbtn" data-act="teacherOut">나가기</button>`;
+  } else if (S.mode === 'admin') {
+    const list = [['recent','평소 현황'],['events','행사']];
+    if (S.adm.me.master) list.push(['teachers','선생님'],['admins','관리자']);
+    tabs = list.map(([k,l]) => `<button class="tab" role="tab" aria-selected="${S.atab===k}" data-act="atab" data-v="${k}">${l}</button>`);
+    whoEl.innerHTML = `<span>${S.adm.me.master ? '마스터 관리자' : esc(S.adm.me.name)+' 관리자'}</span><button class="linkbtn" data-act="refresh">새로고침</button><button class="linkbtn" data-act="adminOut">나가기</button>`;
+  } else whoEl.innerHTML = '';
+  tabsEl.innerHTML = tabs.join('');
+}
+
+// ----- login -----
+function legend(){ return `<div class="legend"><span><i class="dot" style="background:var(--gold)"></i>교재풀이</span><span><i class="dot" style="background:var(--mint)"></i>글씨</span><span><i class="dot" style="background:var(--coral)"></i>특별</span></div>`; }
+function loginView(){
+  const L = S.login, ds = uniq(S.teachers.map(t=>t.district));
+  let form;
+  if (!S.teachers.length) {
+    form = `<div class="empty"><h3 style="color:var(--ink);margin-bottom:6px">등록된 선생님이 없어요</h3><p style="margin:0">관리자가 지구명과 교사명을 등록하면 여기에 이름이 나타나요.</p></div>`;
+  } else {
+    if (!L.district || !ds.includes(L.district)) L.district = ds[0];
+    const ts = S.teachers.filter(t=>t.district===L.district).sort((a,b)=>a.name.localeCompare(b.name,'ko'));
+    const pick = S.teachers.find(t=>t.id===L.pick);
+    form = `<div class="stack">
+      <h2>선생님 선택</h2>
+      <div class="field"><label for="ld">지구</label><select id="ld" data-in="login.district">${ds.map(d=>`<option ${d===L.district?'selected':''}>${esc(d)}</option>`).join('')}</select></div>
+      <div class="tlist">${ts.map(t => `<button class="tbtn" aria-pressed="${L.pick===t.id}" data-act="pick" data-v="${t.id}">${esc(t.name)}</button>`).join('')}</div>
+      ${pick ? `<div class="field"><label for="lpin">${esc(pick.name)} 선생님 PIN 4자리</label>
+        <input type="password" id="lpin" class="pin" inputmode="numeric" maxlength="4" data-in="login.pin" value="${esc(L.pin)}" autocomplete="off"></div>
+        ${L.err ? `<div class="notice bad">${esc(L.err)}</div>` : ''}
+        <button class="btn primary" data-act="login">들어가기</button>
+        <p class="small muted" style="margin:0">한 번 들어오면 이 기기에서는 다음부터 PIN 없이 바로 열려요.</p>` : ''}
+    </div>`;
+  }
+  return `<div class="stack"><div class="card">${form}</div>
+    <button class="linkbtn" data-act="lmode" data-v="admin" style="align-self:center">관리자 로그인</button></div>`;
+}
+function adminLoginView(){
+  const L = S.login;
+  return `<div class="card stack" style="max-width:440px;margin:0 auto;width:100%">
+    <h2>관리자 로그인</h2>
+    <div class="tlist">${S.admins.map(a => `<button class="tbtn" aria-pressed="${L.apick===a.id}" data-act="apick" data-v="${a.id}">${esc(a.name)}</button>`).join('')}</div>
+    <div class="field"><label for="apw">비밀번호</label><input type="password" id="apw" data-in="login.pw" value="${esc(L.pw)}" autocomplete="current-password"></div>
+    ${L.err ? `<div class="notice bad">${esc(L.err)}</div>` : ''}
+    <div class="row"><button class="btn primary" data-act="adminLogin">들어가기</button><button class="btn" data-act="lmode" data-v="pick">선생님 화면으로</button></div>
+  </div>`;
+}
+
+// ----- teacher: board -----
+function eventBanners(m){
+  if (!S.tevents.length) return '';
+  return S.tevents.map(e => {
+    const st = evStatus(e), n = sumIn(m, e.start, e.end), pct = Math.min(100, Math.round(n/e.goal*100));
+    return `<div class="evbanner">
+      <div class="row between"><div class="row">${scopePill(e.scope)}${statusPill(e)}<b>${esc(e.name)}</b></div><span class="small num">${fmtMD(e.start)} ~ ${fmtMD(e.end)}</span></div>
+      ${st==='soon' ? `<div class="small">${fmtMD(e.start)}부터 붙인 스티커가 행사에 들어가요 · ${e.goal}개 이상 시상</div>`
+        : `<div class="row between small"><span>${esc(m.name)} 행사 기간 스티커</span><b class="num">${n} / ${e.goal}개</b></div><div class="bar"><i style="width:${pct}%"></i></div>`}
+    </div>`;
+  }).join('');
+}
+function boardView(){
+  const list = activeMembers();
+  if (!list.length) return `<div class="card empty"><h3 style="color:var(--ink);margin-bottom:6px">아직 등록된 회원이 없어요</h3><p style="margin:0 0 14px">‘내 회원’에서 아이 이름을 등록하면 스티커판이 만들어져요.</p><button class="btn primary" data-act="tab" data-v="members">회원 등록하러 가기</button></div>`;
+  if (!S.sel || !list.find(m=>m.id===S.sel)) S.sel = list[0].id;
+  const wk = weekKey(Date.now());
+  const chips = list.map(m => `<button class="chip" aria-pressed="${m.id===S.sel}" data-act="sel" data-v="${m.id}">${esc(m.name)}<span class="c num">${weekState(m,wk).used}/${WEEK_MAX}</span></button>`).join('');
+  const m = list.find(x=>x.id===S.sel), b = boardCells(m);
+  let cells = ''; const newFrom = b.cur.length - S.newCells;
+  for (let i=0;i<b.size;i++){ const g = b.cur[i]; cells += g ? `<div class="cell on ${g}${S.newCells && i>=newFrom ? ' new':''}">${svg(g)}</div>` : `<div class="cell">${i+1}</div>`; }
+  const ws = weekState(m, wk);
+  const meter = Array.from({length:WEEK_MAX},(_,i)=>`<i class="${i<ws.used?'f':''}"></i>`).join('');
+  const ab = (cat, sub, off) => `<button class="abtn ${CAT[cat].g}" data-act="award" data-v="${cat}" ${off?'disabled':''}><b>${CAT[cat].short} +${CAT[cat].n}</b><span>${sub}</span></button>`;
+  const doneTxt = a => a ? `지급함 · ${CAT[a.cat].short} ${fmtTime(a.at)}` : '주 1회';
+  const full = ws.used >= WEEK_MAX;
+  const pend = S.pending ? CAT[S.pending] : null;
+  return `<div class="stack">
+    <div class="chips" aria-label="회원 선택">${chips}</div>
+    ${eventBanners(m)}
+    <div class="board">
+      <div class="board-head"><div><div class="small muted">${b.boardNo}번째 판${b.boardsDone && !b.full ? ` · 완성 ${b.boardsDone}판` : ''}</div><h2>${esc(m.name)}의 칭찬스티커판</h2></div>
+        <div class="ring" style="--p:${Math.round(b.cur.length/b.size*100)}"><span><b class="num">${b.cur.length}</b><small class="num">/ ${b.size}</small></span></div></div>
+      <div class="grid ${b.size===50?'g50':''}">${cells}</div>
+      ${legend()}
+      ${b.full ? `<div class="done-banner">판 완성! 다음 스티커부터 새 판이 시작돼요</div>` : ''}
+    </div>
+    <button class="btn primary" data-act="export">학부모에게 보내기</button>
+    <div class="card stack">
+      <div class="week"><div><h3>이번 주 스티커</h3><div class="small muted">${fmtMD(wk)} ~ ${fmtMD(addDays(wk,6))} · 매주 월요일 초기화</div></div>
+        <div class="row"><div class="meter">${meter}</div><b class="num">${ws.used}/${WEEK_MAX}</b></div></div>
+      <div class="agroup study"><div class="ahead"><h3><span class="ico sm study">${svg('study')}</span>교재풀이</h3><span class="small">${doneTxt(ws.study)}</span></div>
+        <div class="abtns">${ab('study2','교재풀이 퍼펙트',!!ws.study||ws.used+2>WEEK_MAX)}${ab('study1','조금 밀렸어요',!!ws.study||full)}</div></div>
+      <div class="agroup write"><div class="ahead"><h3><span class="ico sm write">${svg('write')}</span>글씨</h3><span class="small">${doneTxt(ws.write)}</span></div>
+        <div class="abtns">${ab('write2','글씨를 정성껏 썼어요',!!ws.write||ws.used+2>WEEK_MAX)}${ab('write1','조금 미흡하지만 노력해요',!!ws.write||full)}</div></div>
+      <div class="agroup special"><div class="ahead"><h3><span class="ico sm special">${svg('special')}</span>오늘의 특별 스티커</h3><span class="small num">${ws.specials.length}/2</span></div>
+        <div class="field"><label for="sn">칭찬 한마디 (필수)</label><textarea id="sn" data-in="specialNote" maxlength="60" placeholder="예) 어려운 문제도 끝까지 혼자 풀었어요!" ${ws.specials.length>=2||full?'disabled':''}>${esc(S.specialNote)}</textarea></div>
+        <button class="btn" data-act="award" data-v="special" ${ws.specials.length>=2||full?'disabled':''}>특별 스티커 +1</button>
+      </div>
+    </div>
+    ${pend ? `<div class="confirm" role="dialog" aria-label="스티커 확인"><p>${esc(m.name)}에게 ‘${esc(pend.label)}’ 스티커 ${pend.n}개를 붙일까요?</p>
+      <button class="btn" data-act="cancel">취소</button><button class="btn primary" data-act="confirm">붙이기</button></div>` : ''}
+  </div>`;
+}
+
+// ----- teacher: members -----
+function membersView(){
+  const list = activeMembers(), wk = weekKey(Date.now());
+  const hidden = S.members.filter(m => !m.active);
+  return `<div class="stack">
+    <div class="card stack">
+      <h2>회원 등록</h2>
+      <div class="field"><label for="an">아이 이름</label><input type="text" id="an" data-in="addName" value="${esc(S.addName)}" maxlength="10" placeholder="이름만 입력 (예: 하윤)"></div>
+      <div class="row between">
+        <div class="row"><span class="small muted" style="font-weight:700">스티커판</span>
+          <div class="seg"><button aria-pressed="${S.addSize===30}" data-act="size" data-v="30">30칸</button><button aria-pressed="${S.addSize===50}" data-act="size" data-v="50">50칸</button></div></div>
+        <button class="btn primary" data-act="addMember">등록</button>
+      </div>
+    </div>
+    <div class="card">
+      <h3 style="margin-bottom:6px">내 회원 ${list.length}명</h3>
+      ${list.length ? `<div class="list">${list.map(m => { const ws = weekState(m,wk), b = boardCells(m); return `
+        <div class="li"><div class="main"><b>${esc(m.name)}</b><span class="small muted num">${b.size}칸 · ${b.boardNo}번째 판 ${b.cur.length}/${b.size} · 누적 ${b.tot}개</span></div>
+          <span class="pill num">이번 주 ${ws.used}/${WEEK_MAX}</span>
+          <button class="btn sm" data-act="openBoard" data-v="${m.id}">판 열기</button>
+          <button class="btn sm" data-act="hide" data-v="${m.id}" title="퇴회 등으로 목록에서 숨기기">숨기기</button></div>`; }).join('')}</div>`
+        : `<div class="empty">위에서 첫 회원을 등록하세요.</div>`}
+    </div>
+    ${hidden.length ? `<div class="card"><h3 style="margin-bottom:6px">숨긴 회원</h3><div class="list">${hidden.map(m=>`<div class="li"><div class="main"><b>${esc(m.name)}</b><span class="small muted">누적 ${total(m)}개 · 기록은 그대로 보관돼요</span></div><button class="btn sm" data-act="unhide" data-v="${m.id}">다시 보이기</button></div>`).join('')}</div></div>` : ''}
+  </div>`;
+}
+
+// ----- teacher: records -----
+function recordsView(){
+  const list = activeMembers(), rows = [];
+  list.forEach(m => {
+    if (S.recFilter !== 'all' && S.recFilter !== m.id) return;
+    m.awards.forEach(a => rows.push({m,a,del:false}));
+    m.removed.forEach(a => rows.push({m,a,del:true}));
+  });
+  rows.sort((x,y)=>y.a.at - x.a.at);
+  const opts = `<option value="all">전체 회원</option>` + list.map(m=>`<option value="${m.id}" ${S.recFilter===m.id?'selected':''}>${esc(m.name)}</option>`).join('');
+  return `<div class="card stack">
+    <div class="row between"><h2>스티커 기록</h2><div style="width:160px"><select id="rf" data-in="recFilter" aria-label="회원 필터">${opts}</select></div></div>
+    <p class="small muted" style="margin:0">잘못 붙인 스티커는 취소할 수 있어요. 취소 내역도 관리자 화면에 남아요.</p>
+    ${rows.length ? `<div class="list">${rows.slice(0,200).map(({m,a,del}) => { const c = CAT[a.cat]; return `
+      <div class="li ${del?'del':''}"><span class="ico ${c.g}">${svg(c.g)}</span>
+        <div class="main"><b>${esc(m.name)} · ${esc(c.label)} +${c.n}</b><span class="small muted">${fmtTime(a.at)}${a.note ? ' · “'+esc(a.note)+'”' : ''}${del ? ' · 취소됨 '+fmtTime(a.delAt) : ''}</span></div>
+        ${del ? '' : (S.delConfirm===a.id ? `<button class="btn sm" data-act="delNo">아니요</button><button class="btn sm danger" data-act="delYes" data-v="${a.id}">취소 확정</button>` : `<button class="btn sm" data-act="delAsk" data-v="${a.id}">취소</button>`)}
+      </div>`; }).join('')}</div>` : `<div class="empty">아직 기록이 없어요.</div>`}
+  </div>`;
+}
+
+// ----- admin helpers -----
+const admDistricts = () => uniq(S.adm.teachers.map(t=>t.district));
+function admRows(weeks, inRange, onlyDistrict){
+  const groups = {};
+  S.adm.teachers.forEach(t => {
+    if (onlyDistrict && t.district !== onlyDistrict) return;
+    if (!onlyDistrict && S.aDistrict !== 'all' && t.district !== S.aDistrict) return;
+    groups[t.id] = {t, members:[], sum:0, removed:0, gaps:0};
+  });
+  const nowWk = weekKey(Date.now());
+  S.adm.members.forEach(m => {
+    const g = groups[m.teacherId]; if (!g) return;
+    const aw = m.awards.filter(a => inRange(a.at));
+    const perW = weeks.map(w => aw.filter(a=>a.wk===w).reduce((s,a)=>s+(CAT[a.cat]?.n||0),0));
+    const sum = perW.reduce((s,x)=>s+x,0);
+    const removed = m.removed.filter(a => inRange(a.at)).length;
+    const zeroW = m.active ? weeks.filter((w,i)=> w < nowWk && perW[i]===0).length : 0;
+    g.members.push({m, perW, sum, removed, zeroW}); g.sum += sum; g.removed += removed; if (zeroW >= 2) g.gaps++;
+  });
+  return Object.values(groups)
+    .filter(g => g.t.active || g.members.some(r=>r.sum>0))
+    .map(g => { g.members.sort((a,b)=>b.sum-a.sum); return g; })
+    .sort((a,b)=> a.t.district.localeCompare(b.t.district,'ko') || a.t.name.localeCompare(b.t.name,'ko'));
+}
+function heat(perW, weeks){
+  const nowWk = weekKey(Date.now());
+  return `<div class="heat">${perW.map((x,i)=> weeks[i] > nowWk ? `<i class="fut" title="${fmtMD(weeks[i])} 주"></i>` : `<i class="${x>=5?'h3':x>=3?'h2':x>0?'h1':''}" title="${fmtMD(weeks[i])} 주">${x}</i>`).join('')}</div>`;
+}
+const wkHead = weeks => `<div class="wkhead">${weeks.map(w=>`<i>${fmtMD(w)}</i>`).join('')}</div>`;
+function districtFilter(){
+  const ds = admDistricts(); if (ds.length < 2) return '';
+  return `<div style="width:180px"><select id="adf" data-in="aDistrict" aria-label="지구 선택"><option value="all">전체 지구</option>${ds.map(d=>`<option ${S.aDistrict===d?'selected':''}>${esc(d)}</option>`).join('')}</select></div>`;
+}
+function groupTable(groups, weeks, opt){
+  const cols = 6;
+  return `<div class="tablewrap"><table>
+    <thead><tr><th>지구 · 선생님</th><th class="n">회원</th><th>${opt.event ? '주별 스티커' : '최근 '+weeks.length+'주'}<br>${wkHead(weeks)}</th><th class="n">합계</th><th class="n">${opt.event ? '시상 대상' : '공백 회원'}</th><th class="n">취소</th></tr></thead>
+    <tbody>${groups.length ? groups.map(g => {
+      const open = S.open[g.t.id];
+      const avgW = weeks.map((_,i)=> g.members.length ? Math.round(g.members.reduce((s,r)=>s+r.perW[i],0)/g.members.length) : 0);
+      const elig = g.members.filter(r => r.sum >= (opt.goal||1e9)).length;
+      const sub = !open ? '' : (g.members.length ? g.members.map(r => `<tr class="sub"><td>· ${esc(r.m.name)}${r.m.active?'':' <span class="pill">숨김</span>'}</td><td></td><td>${heat(r.perW, weeks)}</td><td class="n">${r.sum}</td>
+          <td class="n">${opt.event ? (r.sum >= opt.goal ? '<span class="pill ok">대상</span>' : `<span class="pill">${r.sum}/${opt.goal}</span>`) : (r.zeroW>=2 ? `<span class="pill bad">${r.zeroW}주 0개</span>` : '')}</td>
+          <td class="n">${r.removed ? `<span class="pill warn">${r.removed}</span>` : ''}</td></tr>`).join('')
+        : `<tr class="sub"><td colspan="${cols}" class="muted">등록된 회원이 없어요.</td></tr>`);
+      return `<tr class="trow" data-act="toggleT" data-v="${g.t.id}"><td><b>${open?'▾':'▸'} ${esc(g.t.district)} · ${esc(g.t.name)}</b>${g.t.active?'':' <span class="pill">사용 중지</span>'}</td><td class="n">${g.members.length}</td>
+        <td><span class="small muted">회원 평균</span>${heat(avgW, weeks)}</td><td class="n">${g.sum}</td>
+        <td class="n">${opt.event ? elig : (g.gaps ? `<span class="pill bad">${g.gaps}명</span>` : '0')}</td><td class="n">${g.removed||''}</td></tr>${sub}`;
+    }).join('') : `<tr><td colspan="${cols}" class="muted">해당하는 선생님이 없어요.</td></tr>`}</tbody>
+  </table></div>`;
+}
+
+// ----- admin: recent -----
+function recentView(){
+  const nowWk = weekKey(Date.now());
+  const weeks = Array.from({length:RECENT_WEEKS},(_,i)=>addDays(nowWk, -7*(RECENT_WEEKS-1-i)));
+  const start = weeks[0], end = addDays(nowWk,6);
+  const groups = admRows(weeks, at => { const d = kstDate(at); return d >= start && d <= end; });
+  const all = groups.flatMap(g=>g.members);
+  const thisW = all.reduce((s,r)=>s+r.perW[r.perW.length-1],0);
+  const active = all.filter(r=>r.m.active);
+  const gaps = active.filter(r=>r.zeroW>=2).length;
+  return `<div class="stack">
+    <div class="sec-title"><div><h2>평소 현황</h2><div class="small muted">${fmtMD(start)} ~ ${fmtMD(end)} · 최근 ${RECENT_WEEKS}주</div></div>${districtFilter()}</div>
+    <div class="tiles">
+      <div class="tile"><span>선생님</span><b>${groups.length}</b></div>
+      <div class="tile"><span>회원</span><b>${active.length}</b></div>
+      <div class="tile"><span>이번 주 스티커</span><b>${thisW}</b></div>
+      <div class="tile"><span>2주 이상 공백</span><b>${gaps}</b></div>
+    </div>
+    ${groupTable(groups, weeks, {event:false})}
+    <p class="small muted" style="margin:0">칸 숫자는 그 주에 붙인 스티커 수(주 최대 ${WEEK_MAX}개)예요. 선생님 행을 누르면 회원별로 펼쳐져요. <span class="pill bad">공백</span>은 지난 주 중 0개인 주가 2주 이상인 회원이에요.</p>
+  </div>`;
+}
+
+// ----- admin: events -----
+function eventForm(){
+  const f = S.evForm; if (!f) return '';
+  const ds = admDistricts();
+  const wks = f.start && f.end && f.start <= f.end ? weeksBetween(f.start, f.end).length : 0;
+  return `<div class="card stack">
+    <h3>${f.id ? '행사 수정' : '새 행사'}</h3>
+    <div class="field"><label for="evn">행사 이름</label><input type="text" id="evn" data-in="evForm.name" value="${esc(f.name)}" maxlength="30" placeholder="예) 겨울 칭찬스티커 시상"></div>
+    <div class="field"><label for="evsc">행사 범위</label><select id="evsc" data-in="evForm.scope">
+      <option value="all" ${f.scope==='all'?'selected':''}>지국 전체 행사</option>
+      ${ds.map(d=>`<option value="${esc(d)}" ${f.scope===d?'selected':''}>${esc(d)} 행사</option>`).join('')}
+    </select></div>
+    <div class="row">
+      <div class="field"><label for="evs">시작일</label><input type="date" id="evs" data-in="evForm.start" value="${esc(f.start)}"></div>
+      <div class="field"><label for="eve">종료일</label><input type="date" id="eve" data-in="evForm.end" value="${esc(f.end)}"></div>
+      <div class="field" style="max-width:140px"><label for="evg">시상 기준(개 이상)</label><input type="number" id="evg" min="1" max="300" data-in="evForm.goal" value="${esc(f.goal)}"></div>
+    </div>
+    <div class="row between"><span class="small muted num">${wks ? `${wks}주 · 기간 최대 ${wks*WEEK_MAX}개` : '시작일과 종료일을 고르세요'}</span>
+      <div class="row"><button class="btn" data-act="evFormClose">닫기</button><button class="btn primary" data-act="evSave">저장</button></div></div>
+  </div>`;
+}
+function eventDetail(e){
+  const weeks = weeksBetween(e.start, e.end);
+  const inR = at => { const x = kstDate(at); return x >= e.start && x <= e.end; };
+  const groups = admRows(weeks, inR, e.scope === 'all' ? null : e.scope);
+  const all = groups.flatMap(g => g.members.map(r => ({...r, t:g.t})));
+  const elig = all.filter(r => r.sum >= e.goal).sort((a,b)=>b.sum-a.sum);
+  const sum = all.reduce((s,r)=>s+r.sum,0);
+  return `<div class="stack">
+    <div class="sec-title"><div><div class="row">${scopePill(e.scope)}${statusPill(e)}</div><h2 style="margin-top:6px">${esc(e.name)}</h2><div class="small muted num">${fmtMD(e.start)} ~ ${fmtMD(e.end)} · ${weeks.length}주 · ${e.goal}개 이상 시상</div></div>${e.scope==='all' ? districtFilter() : ''}</div>
+    <div class="tiles">
+      <div class="tile"><span>선생님</span><b>${groups.length}</b></div>
+      <div class="tile"><span>회원</span><b>${all.length}</b></div>
+      <div class="tile"><span>기간 내 스티커</span><b>${sum}</b></div>
+      <div class="tile"><span>시상 대상</span><b>${elig.length}</b></div>
+    </div>
+    ${groupTable(groups, weeks, {event:true, goal:e.goal})}
+    <div class="card stack">
+      <div class="row between"><h3>시상 대상 명단 <span class="muted num">${elig.length}명</span></h3>
+        <div class="row"><button class="btn sm" data-act="copyList" ${elig.length?'':'disabled'}>명단 복사</button><button class="btn sm" data-act="csv">전체 CSV</button></div></div>
+      ${elig.length ? `<div class="list">${elig.map((r,i)=>`<div class="li"><span class="num muted" style="width:24px">${i+1}</span><div class="main"><b>${esc(r.m.name)}</b><span class="small muted">${esc(r.t.district)} · ${esc(r.t.name)} 선생님</span></div><b class="num">${r.sum}개</b></div>`).join('')}</div>`
+        : `<div class="empty">기간 안에 ${e.goal}개 이상 모은 회원이 여기에 나타나요.</div>`}
+    </div>
+  </div>`;
+}
+function eventsView(){
+  const evs = S.adm.events;
+  if (S.evSel && !evs.find(e=>e.id===S.evSel)) S.evSel = null;
+  const sel = evs.find(e=>e.id===S.evSel);
+  return `<div class="stack">
+    <div class="sec-title"><h2>행사</h2>${S.evForm ? '' : `<button class="btn primary" data-act="evNew">+ 새 행사</button>`}</div>
+    ${eventForm()}
+    ${evs.length ? `<div class="evlist">${evs.map(e => `
+      <div class="evcard" role="button" tabindex="0" aria-pressed="${S.evSel===e.id}" data-act="evPick" data-v="${e.id}">
+        <div class="row">${scopePill(e.scope)}${statusPill(e)}</div>
+        <h3>${esc(e.name)}</h3>
+        <div class="row between"><span class="small muted num">${fmtMD(e.start)} ~ ${fmtMD(e.end)} · ${e.goal}개 이상${e.createdBy ? ' · '+esc(e.createdBy) : ''}</span>
+          <div class="row">${S.evDel===e.id ? `<button class="btn sm" data-act="evDelNo">아니요</button><button class="btn sm danger" data-act="evDelYes" data-v="${e.id}">삭제</button>`
+            : `<button class="btn sm" data-act="evEdit" data-v="${e.id}">수정</button><button class="btn sm" data-act="evDelAsk" data-v="${e.id}">삭제</button>`}</div></div>
+      </div>`).join('')}</div>`
+      : (S.evForm ? '' : `<div class="card empty">아직 만든 행사가 없어요. 지국 전체 행사나 지구별 행사를 여러 개 만들 수 있어요.</div>`)}
+    ${sel ? eventDetail(sel) : (evs.length ? `<p class="small muted" style="margin:0;text-align:center">행사를 누르면 기간 집계와 시상 대상이 보여요.</p>` : '')}
+  </div>`;
+}
+
+// ----- admin: teachers (master) -----
+function teachersView(){
+  const f = S.tForm || {id:'', district:'', name:'', pin:''};
+  const ds = admDistricts();
+  const cnt = {}; S.adm.members.forEach(m => { if (m.active) cnt[m.teacherId] = (cnt[m.teacherId]||0)+1; });
+  const act = S.adm.teachers.filter(t=>t.active && (S.aDistrict==='all' || t.district===S.aDistrict));
+  const off = S.adm.teachers.filter(t=>!t.active);
+  const byD = {}; act.forEach(t => (byD[t.district] = byD[t.district] || []).push(t));
+  return `<div class="stack">
+    <div class="card stack">
+      <h2>${f.id ? '선생님 정보 수정' : '선생님 등록'}</h2>
+      <div class="row">
+        <div class="field"><label for="tfd">지구명</label><input type="text" id="tfd" list="dlist" data-in="tForm.district" value="${esc(f.district)}" maxlength="20" placeholder="예) 내외지구"></div>
+        <div class="field"><label for="tfn">교사명</label><input type="text" id="tfn" data-in="tForm.name" value="${esc(f.name)}" maxlength="12" placeholder="예) 김민지"></div>
+        <div class="field" style="max-width:150px"><label for="tfp">PIN 4자리${f.id ? ' (바꿀 때만)' : ''}</label><input type="text" id="tfp" class="pin" inputmode="numeric" maxlength="4" data-in="tForm.pin" value="${esc(f.pin)}" autocomplete="off"></div>
+      </div>
+      <datalist id="dlist">${ds.map(d=>`<option value="${esc(d)}">`).join('')}</datalist>
+      <div class="row between"><span class="small muted">PIN은 선생님이 새 기기에서 처음 들어올 때만 써요. 선생님께 따로 알려주세요.</span>
+        <div class="row">${f.id ? `<button class="btn" data-act="tFormReset">취소</button>` : ''}<button class="btn primary" data-act="tSave">${f.id ? '수정 저장' : '등록'}</button></div></div>
+    </div>
+    <div class="sec-title"><h3>선생님 ${act.length}명</h3>${districtFilter()}</div>
+    <div class="card">
+      ${act.length ? Object.keys(byD).sort((a,b)=>a.localeCompare(b,'ko')).map(d => `<div class="group-h">${esc(d)} · ${byD[d].length}명</div><div class="list">${byD[d].sort((a,b)=>a.name.localeCompare(b.name,'ko')).map(t => `
+        <div class="li"><div class="main"><b>${esc(t.name)}</b><span class="small muted">회원 ${cnt[t.id]||0}명</span></div>
+          ${S.tConfirm===t.id ? `<button class="btn sm" data-act="tOffNo">아니요</button><button class="btn sm danger" data-act="tOffYes" data-v="${t.id}">사용 중지</button>`
+            : `<button class="btn sm" data-act="tEdit" data-v="${t.id}">수정·PIN 변경</button><button class="btn sm" data-act="tOffAsk" data-v="${t.id}">사용 중지</button>`}</div>`).join('')}</div>`).join('')
+        : `<div class="empty">위에서 첫 선생님을 등록하세요.</div>`}
+    </div>
+    ${off.length ? `<div class="card"><h3 style="margin-bottom:6px">사용 중지한 선생님</h3><div class="list">${off.map(t=>`<div class="li"><div class="main"><b>${esc(t.district)} · ${esc(t.name)}</b><span class="small muted">기록은 그대로 보관돼요</span></div><button class="btn sm" data-act="tOn" data-v="${t.id}">다시 사용</button></div>`).join('')}</div></div>` : ''}
+  </div>`;
+}
+
+// ----- admin: admins (master) -----
+function adminsView(){
+  const f = S.adForm, list = S.adm.admins || [];
+  return `<div class="stack">
+    <div class="card stack">
+      <h2>관리자 추가</h2>
+      <p class="small muted" style="margin:0">추가한 관리자는 평소 현황과 행사(지국·지구 모두)를 보고 만들 수 있어요. 선생님 등록과 관리자 추가는 마스터만 할 수 있어요.</p>
+      <div class="row">
+        <div class="field"><label for="adn">관리자 이름</label><input type="text" id="adn" data-in="adForm.name" value="${esc(f.name)}" maxlength="12" placeholder="예) 박지국장"></div>
+        <div class="field"><label for="adp">비밀번호 (4자 이상)</label><input type="text" id="adp" data-in="adForm.pw" value="${esc(f.pw)}" maxlength="30" autocomplete="off"></div>
+      </div>
+      <div class="row" style="justify-content:flex-end"><button class="btn primary" data-act="adAdd">추가</button></div>
+    </div>
+    <div class="card">
+      <h3 style="margin-bottom:6px">관리자 ${list.length + 1}명</h3>
+      <div class="list">
+        <div class="li"><div class="main"><b>마스터</b><span class="small muted">비밀번호는 구글 앱스스크립트(Code.gs) 맨 위에서 바꿔요</span></div><span class="pill scope-all">마스터</span></div>
+        ${list.map(a => `<div class="li"><div class="main"><b>${esc(a.name)}</b><span class="small muted">추가 ${a.createdAt ? fmtMD(kstDate(a.createdAt)) : '-'}</span></div>
+          ${S.adDel===a.id ? `<button class="btn sm" data-act="adDelNo">아니요</button><button class="btn sm danger" data-act="adDelYes" data-v="${a.id}">삭제</button>` : `<button class="btn sm" data-act="adDelAsk" data-v="${a.id}">삭제</button>`}</div>`).join('')}
+      </div>
+    </div>
+  </div>`;
+}
+
+// ---------- image export ----------
+async function makeImage(m){
+  try { await Promise.all([document.fonts.load('40px Jua'), document.fonts.load('700 20px "Noto Sans KR"')]); } catch {}
+  const b = boardCells(m);
+  const W = 1080, cols = b.size===50 ? 10 : 6, rows = Math.ceil(b.size/cols);
+  const gap = 18, padX = 80, cellW = (W - padX*2 - gap*(cols-1)) / cols;
+  const headH = 300, gridH = rows*cellW + (rows-1)*gap;
+  const notes = m.awards.filter(a=>a.cat==='special' && a.note).sort((x,y)=>y.at-x.at).slice(0,2);
+  const H = Math.round(headH + gridH + 120 + notes.length*64 + 130);
+  const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+  const x = cv.getContext('2d');
+  const C = {bg:'#E3F1D3', paper:'#FFFFFF', band:'#DDF0CF', ink:'#24321D', muted:'#6D7B64', line:'#E1EAD5', accent:'#5FAE4C'};
+  const col = {study:'#F6C744', write:'#5DB8E5', special:'#F2849B'};
+  x.fillStyle = C.bg; x.fillRect(0,0,W,H);
+  const rr = (X,Y,w,h,r) => { x.beginPath(); x.moveTo(X+r,Y); x.arcTo(X+w,Y,X+w,Y+h,r); x.arcTo(X+w,Y+h,X,Y+h,r); x.arcTo(X,Y+h,X,Y,r); x.arcTo(X,Y,X+w,Y,r); x.closePath(); };
+  rr(40,40,W-80,H-80,48); x.fillStyle = C.paper; x.fill();
+  x.save(); rr(40,40,W-80,H-80,48); x.clip(); const gr = x.createLinearGradient(0,40,0,420); gr.addColorStop(0,C.band); gr.addColorStop(1,C.paper); x.fillStyle = gr; x.fillRect(40,40,W-80,380); x.restore();
+  x.fillStyle = C.muted; x.font = '700 30px "Noto Sans KR", sans-serif';
+  x.fillText(`${b.boardNo}번째 판 · ${kstDate(Date.now()).replace(/-/g,'.')}`, padX, 130);
+  x.fillStyle = C.ink; x.font = '76px Jua, sans-serif';
+  x.fillText(`${m.name}의 칭찬스티커판`, padX, 220, W - padX*2 - 10);
+  x.fillStyle = C.accent; x.font = '56px Jua, sans-serif'; x.textAlign='right';
+  x.fillText(`${b.cur.length} / ${b.size}`, W-padX, 130); x.textAlign='left';
+  const paths = {study:new Path2D(ICON.study), write:new Path2D(ICON.write), special:new Path2D(ICON.special)};
+  for (let i=0;i<b.size;i++){
+    const cx = padX + (i%cols)*(cellW+gap) + cellW/2, cy = headH + Math.floor(i/cols)*(cellW+gap) + cellW/2, r = cellW/2, g = b.cur[i];
+    if (g){
+      x.beginPath(); x.arc(cx,cy,r,0,Math.PI*2); x.fillStyle = col[g]; x.fill();
+      x.save(); const s = (cellW*0.6)/24; x.translate(cx-12*s, cy-12*s); x.scale(s,s); x.fillStyle='#fff'; x.fill(paths[g]); x.restore();
+    } else {
+      x.beginPath(); x.arc(cx,cy,r-3,0,Math.PI*2); x.setLineDash([10,8]); x.lineWidth=4; x.strokeStyle=C.line; x.stroke(); x.setLineDash([]);
+      x.fillStyle = C.muted; x.font = `700 ${Math.round(cellW*0.28)}px "Noto Sans KR", sans-serif`; x.textAlign='center'; x.textBaseline='middle'; x.fillText(String(i+1), cx, cy); x.textAlign='left'; x.textBaseline='alphabetic';
+    }
+  }
+  let y = headH + gridH + 80;
+  x.font = '700 28px "Noto Sans KR", sans-serif';
+  let lx = padX; [['study','교재풀이'],['write','글씨'],['special','특별']].forEach(([g,l]) => { x.beginPath(); x.arc(lx+14,y-10,14,0,Math.PI*2); x.fillStyle=col[g]; x.fill(); x.fillStyle=C.muted; x.fillText(l, lx+38, y); lx += 38 + x.measureText(l).width + 40; });
+  y += 30;
+  notes.forEach(n => { y += 64; x.save(); const s = 1.5; x.translate(padX, y-30); x.scale(s,s); x.fillStyle = col.special; x.fill(paths.special); x.restore(); x.fillStyle = C.ink; x.font='700 32px "Noto Sans KR", sans-serif'; x.fillText(n.note, padX+56, y, W-padX*2-56); });
+  x.fillStyle = C.muted; x.font = '700 28px "Noto Sans KR", sans-serif'; x.textAlign='right';
+  x.fillText(`${tLabel(S.teacher)} 선생님이 칭찬해요`, W-padX, H-90); x.textAlign='left';
+  return await new Promise(res => cv.toBlob(res, 'image/png'));
+}
+async function openExport(){
+  const m = S.members.find(x=>x.id===S.sel); if (!m) return;
+  layer.innerHTML = `<div class="modal"><div class="modal-in"><div class="empty">이미지를 만드는 중…</div></div></div>`;
+  const blob = await makeImage(m);
+  const url = URL.createObjectURL(blob);
+  const fname = `${m.name}_칭찬스티커_${kstDate(Date.now())}.png`;
+  const file = new File([blob], fname, {type:'image/png'});
+  const canShare = !!(navigator.canShare && navigator.canShare({files:[file]}));
+  let dl = null; try { dl = window.claude?.use ? await window.claude.use('downloads') : null; } catch {}
+  layer.innerHTML = `<div class="modal" data-act="closeModal"><div class="modal-in" data-stop="1">
+    <h3>${esc(m.name)} 스티커판</h3>
+    <img src="${url}" alt="${esc(m.name)}의 칭찬스티커판 이미지">
+    ${canShare ? `<button class="btn primary" id="shareImg">카카오톡으로 보내기</button>` : ''}
+    ${dl ? `<button class="btn ${canShare?'':'primary'}" id="saveImg">이미지 저장</button>` : `<a class="btn ${canShare?'':'primary'}" href="${url}" download="${esc(fname)}" style="text-align:center;text-decoration:none">이미지 저장</a>`}
+    <p class="small muted" style="margin:0">${canShare ? '공유창에서 카카오톡을 고르고 학부모님 채팅방을 선택하세요.' : '저장한 이미지를 카카오톡 사진으로 보내세요. 저장이 안 되면 이미지를 길게 눌러 저장하세요.'}</p>
+    <button class="btn" data-act="closeModal">닫기</button></div></div>`;
+  document.getElementById('shareImg')?.addEventListener('click', async () => {
+    try { await navigator.share({files:[file], title:`${m.name} 칭찬스티커판`}); } catch(e){ if (e?.name !== 'AbortError') toast('공유하지 못했어요. 이미지 저장을 이용해 주세요'); }
+  });
+  document.getElementById('saveImg')?.addEventListener('click', async () => {
+    try { await dl.save({filename:fname, data:blob}); toast('저장했어요'); } catch(e){ if (e?.code !== 'declined') toast('저장하지 못했어요. 이미지를 길게 눌러 저장해 주세요'); }
+  });
+}
+function fileSave(name, text, mime){
+  const blob = new Blob([text], {type:mime});
+  (async () => {
+    let dl = null; try { dl = window.claude?.use ? await window.claude.use('downloads') : null; } catch {}
+    if (dl) { try { await dl.save({filename:name, data:blob}); } catch(e){ if (e?.code!=='declined') toast('저장하지 못했어요'); } return; }
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); a.remove();
+  })();
+}
+function selEventRows(){
+  const e = S.adm.events.find(x=>x.id===S.evSel); if (!e) return null;
+  const weeks = weeksBetween(e.start, e.end);
+  const groups = admRows(weeks, at => { const x = kstDate(at); return x >= e.start && x <= e.end; }, e.scope==='all' ? null : e.scope);
+  return {e, weeks, groups};
+}
+
+// ---------- actions ----------
+async function act(a, v, el){
+  const L = S.login;
+  switch(a){
+    case 'reload': S.loadErr=''; app.innerHTML = '<div class="empty">불러오는 중…</div>'; boot(); break;
+    case 'tab': S.tab = v; S.pending = null; render(); window.scrollTo(0,0); break;
+    case 'atab': S.atab = v; S.tConfirm = null; S.adDel = null; S.evDel = null; render(); window.scrollTo(0,0); break;
+    case 'teacherOut': teacherOut(); render(); break;
+    case 'adminOut': adminOut(); render(); break;
+    case 'refresh': run('불러오는 중…', async () => applyAdmin(await api('admin', A()))); break;
+    case 'lmode': L.mode = v; L.err=''; L.pw=''; render(); break;
+    case 'pick': L.pick = v; L.pin=''; L.err=''; render(); setTimeout(()=>document.getElementById('lpin')?.focus(),0); break;
+    case 'apick': L.apick = v; L.err=''; render(); setTimeout(()=>document.getElementById('apw')?.focus(),0); break;
+    case 'login':
+      if (!/^\d{4}$/.test(L.pin)) { L.err='PIN 숫자 4자리를 입력해 주세요.'; return render(); }
+      run('확인 중…', async () => {
+        try { applyMe(await api('login', {tid:L.pick, pin:L.pin})); S.tab='board'; L.pick=null; L.pin=''; L.err=''; toast(`${S.teacher.name} 선생님, 반가워요`); }
+        catch(e){ L.err = e.message; L.pin=''; }
+      });
+      break;
+    case 'adminLogin':
+      run('확인 중…', async () => {
+        try { applyAdmin(await api('adminLogin', {aid:L.apick, pw:L.pw})); S.atab='recent'; L.pw=''; L.err=''; }
+        catch(e){ L.err = e.message; }
+      });
+      break;
+    case 'sel': S.sel = v; S.pending = null; render(); break;
+    case 'openBoard': S.sel = v; S.tab='board'; render(); window.scrollTo(0,0); break;
+    case 'award':
+      if (v === 'special' && !S.specialNote.trim()) { toast('특별 스티커는 칭찬 한마디를 적어 주세요'); document.getElementById('sn')?.focus(); return; }
+      S.pending = v; render(); break;
+    case 'cancel': S.pending = null; render(); break;
+    case 'confirm': {
+      const cat = S.pending, mid = S.sel; const m = S.members.find(x=>x.id===mid); if (!cat || !m) return;
+      const before = boardCells(m);
+      run('붙이는 중…', async () => {
+        applyMe(await api('award', {tid:S.tid, token:S.token, mid, cat, note: cat==='special' ? S.specialNote : ''}));
+        S.pending = null; if (cat==='special') S.specialNote = '';
+        S.newCells = CAT[cat].n;
+        const after = before.tot + CAT[cat].n;
+        toast(Math.floor(after/before.size) > Math.floor(before.tot/before.size) ? `${m.name} 스티커판 완성!` : `${CAT[cat].short} 스티커 ${CAT[cat].n}개를 붙였어요`);
+      });
+      break;
+    }
+    case 'export': openExport(); break;
+    case 'closeModal': layer.querySelector('.modal')?.remove(); break;
+    case 'size': S.addSize = +v; render(); break;
+    case 'addMember': {
+      const name = S.addName.trim(); if (!name) { toast('아이 이름을 입력해 주세요'); return; }
+      run('등록 중…', async () => { applyMe(await api('memberAdd', {tid:S.tid, token:S.token, name, size:S.addSize})); S.addName=''; toast(`${name} 등록 완료`); });
+      break;
+    }
+    case 'hide': run('저장 중…', async () => { applyMe(await api('memberActive', {tid:S.tid, token:S.token, mid:v, active:false})); toast('숨겼어요'); }); break;
+    case 'unhide': run('저장 중…', async () => { applyMe(await api('memberActive', {tid:S.tid, token:S.token, mid:v, active:true})); }); break;
+    case 'delAsk': S.delConfirm = v; render(); break;
+    case 'delNo': S.delConfirm = null; render(); break;
+    case 'delYes': run('취소 중…', async () => { applyMe(await api('cancel', {tid:S.tid, token:S.token, aid:v})); S.delConfirm=null; toast('스티커를 취소했어요'); }); break;
+    case 'toggleT': if (el.closest('button')) return; S.open[v] = !S.open[v]; render(); break;
+    // events
+    case 'evNew': S.evForm = {id:'', name:'', scope:'all', start:today(), end:addDays(today(),41), goal:30}; render(); setTimeout(()=>document.getElementById('evn')?.focus(),0); break;
+    case 'evEdit': { const e = S.adm.events.find(x=>x.id===v); if (e) { S.evForm = {...e}; render(); window.scrollTo(0,0); } break; }
+    case 'evFormClose': S.evForm = null; render(); break;
+    case 'evSave': {
+      const f = S.evForm; if (!f) return;
+      if (!f.name.trim()) { toast('행사 이름을 입력해 주세요'); return; }
+      if (!f.start || !f.end || f.start > f.end) { toast('행사 기간을 확인해 주세요'); return; }
+      run('저장 중…', async () => { applyAdmin(await api('eventSave', {...A(), ...f})); S.evForm = null; toast('행사를 저장했어요'); });
+      break;
+    }
+    case 'evPick': if (el.closest('button')) return; S.evSel = S.evSel === v ? null : v; render(); break;
+    case 'evDelAsk': S.evDel = v; render(); break;
+    case 'evDelNo': S.evDel = null; render(); break;
+    case 'evDelYes': run('삭제 중…', async () => { applyAdmin(await api('eventDelete', {...A(), id:v})); S.evDel = null; if (S.evSel===v) S.evSel=null; toast('행사를 삭제했어요. 스티커 기록은 그대로예요'); }); break;
+    case 'copyList': {
+      const r = selEventRows(); if (!r) return;
+      const lines = r.groups.flatMap(g => g.members.filter(x=>x.sum>=r.e.goal).map(x => `${g.t.district}\t${g.t.name}\t${x.m.name}\t${x.sum}`));
+      try { await navigator.clipboard.writeText('지구\t선생님\t회원\t스티커\n' + lines.join('\n')); toast('명단을 복사했어요'); } catch { toast('복사할 수 없어요. 전체 CSV를 이용해 주세요'); }
+      break;
+    }
+    case 'csv': {
+      const r = selEventRows(); if (!r) return;
+      const head = ['지구','선생님','회원', ...r.weeks.map(w=>fmtMD(w)+'주'), '합계', '시상대상', '취소건수'];
+      const lines = r.groups.flatMap(g => g.members.map(x => [g.t.district, g.t.name, x.m.name, ...x.perW, x.sum, x.sum>=r.e.goal?'O':'', x.removed]));
+      const csv = '﻿' + [head, ...lines].map(row => row.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+      fileSave(`${r.e.name}_${r.e.start}_${r.e.end}.csv`, csv, 'text/csv');
+      break;
+    }
+    // teachers (master)
+    case 'tSave': {
+      const f = S.tForm || {id:'', district:'', name:'', pin:''};
+      if (!f.district.trim() || !f.name.trim()) { toast('지구명과 교사명을 입력해 주세요'); return; }
+      if (!f.id && !/^\d{4}$/.test(f.pin)) { toast('PIN 숫자 4자리를 정해 주세요'); return; }
+      if (f.id && f.pin && !/^\d{4}$/.test(f.pin)) { toast('PIN은 숫자 4자리예요'); return; }
+      run('저장 중…', async () => { applyAdmin(await api('teacherSave', {...A(), ...f})); toast(f.id ? '수정했어요' : `${f.district} · ${f.name} 선생님을 등록했어요`); S.tForm = {id:'', district:f.district, name:'', pin:''}; S.teachers = (await api('init')).teachers; });
+      break;
+    }
+    case 'tEdit': { const t = S.adm.teachers.find(x=>x.id===v); if (t) { S.tForm = {id:t.id, district:t.district, name:t.name, pin:''}; render(); window.scrollTo(0,0); } break; }
+    case 'tFormReset': S.tForm = null; render(); break;
+    case 'tOffAsk': S.tConfirm = v; render(); break;
+    case 'tOffNo': S.tConfirm = null; render(); break;
+    case 'tOffYes': run('저장 중…', async () => { applyAdmin(await api('teacherActive', {...A(), tid:v, active:false})); S.tConfirm = null; toast('사용 중지했어요'); }); break;
+    case 'tOn': run('저장 중…', async () => { applyAdmin(await api('teacherActive', {...A(), tid:v, active:true})); }); break;
+    // admins (master)
+    case 'adAdd': {
+      const f = S.adForm;
+      if (!f.name.trim()) { toast('관리자 이름을 입력해 주세요'); return; }
+      if (f.pw.length < 4) { toast('비밀번호는 4자 이상이에요'); return; }
+      run('저장 중…', async () => { applyAdmin(await api('adminAdd', {...A(), name:f.name, pw:f.pw})); toast(`${f.name} 관리자를 추가했어요`); S.adForm = {name:'', pw:''}; S.admins = (await api('init')).admins; });
+      break;
+    }
+    case 'adDelAsk': S.adDel = v; render(); break;
+    case 'adDelNo': S.adDel = null; render(); break;
+    case 'adDelYes': run('삭제 중…', async () => { applyAdmin(await api('adminRemove', {...A(), id:v})); S.adDel = null; S.admins = (await api('init')).admins; toast('관리자를 삭제했어요'); }); break;
+  }
+}
+
+// ---------- events ----------
+document.addEventListener('click', e => {
+  const t = e.target.closest('[data-act]'); if (!t) return;
+  const stop = e.target.closest('[data-stop]');
+  if (stop && !stop.contains(t)) return;
+  act(t.dataset.act, t.dataset.v, e.target);
+});
+document.addEventListener('input', e => {
+  const k = e.target.dataset?.in; if (!k) return;
+  let v = e.target.value;
+  if (e.target.classList.contains('pin')) { v = v.replace(/\D/g,'').slice(0,4); e.target.value = v; }
+  const [root, sub] = k.split('.');
+  if (sub) {
+    if (root === 'login') { S.login[sub] = v; if (sub === 'district') { S.login.pick = null; render(); } }
+    else if (root === 'evForm') { S.evForm[sub] = v; if (e.target.type === 'date' || e.target.tagName === 'SELECT') render(); }
+    else if (root === 'tForm') { S.tForm = S.tForm || {id:'', district:'', name:'', pin:''}; S.tForm[sub] = v; }
+    else if (root === 'adForm') { S.adForm[sub] = v; }
+  } else { S[k] = v; if (k === 'recFilter' || k === 'aDistrict') render(); }
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && e.target.classList?.contains('evcard')) { act('evPick', e.target.dataset.v, e.target); return; }
+  if (e.key !== 'Enter' || !e.target.dataset?.in) return;
+  const k = e.target.dataset.in;
+  if (k === 'login.pin') act('login'); else if (k === 'login.pw') act('adminLogin'); else if (k === 'addName') act('addMember');
+});
+
+boot();
+})();
+
+</script>
+</body>
+</html>
