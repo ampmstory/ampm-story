@@ -226,6 +226,16 @@ tr.sub .heat i.h2{background:color-mix(in srgb,var(--accent) 60%,var(--surface))
 .evhead .pill:not(.scope-all):not(.scope-d){background:var(--surface)}
 .chk{border:0;border-radius:12px;padding:9px 14px;font-weight:700;background:var(--sunk);color:var(--muted);min-width:96px}
 .chk[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.navbar{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.navbar .btn{background:var(--surface);box-shadow:var(--shadow)}
+.mgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.mcard{border:2px solid transparent;background:var(--surface);border-radius:20px;padding:14px;box-shadow:var(--shadow);text-align:left;display:flex;flex-direction:column;gap:7px;align-items:flex-start;min-width:0}
+.mcard:hover{border-color:var(--accent)}
+.mcard.full{background:var(--accent-soft)}
+.mcard .nm{font-family:var(--display);font-size:21px;line-height:1.2;max-width:100%;overflow-wrap:anywhere}
+.mcard .mini{display:block;width:100%;height:8px;border-radius:4px;background:var(--sunk);overflow:hidden}
+.mcard .mini i{display:block;height:100%;background:var(--gold);border-radius:4px}
+.mcard.full .mini{background:var(--surface)}
 @media (prefers-reduced-motion:reduce){.cell.new{animation:none}.abtn:hover{transform:none}}
 </style>
 
@@ -610,7 +620,7 @@ const S = {
   addName:'', addSize:30, recFilter:'all', delConfirm:null,
   open:{}, aDistrict:'all', evSel:null, evForm:null, evDel:null,
   tForm:null, tConfirm:null, adForm:{name:'', pw:''}, adDel:null,
-  view:'all', attFilter:'elig', attQ:''
+  view:'all', attFilter:'elig', attQ:'', memberQ:''
 };
 const app = document.getElementById('app'), tabsEl = document.getElementById('tabs'), whoEl = document.getElementById('who'), layer = document.getElementById('layer');
 if (DEMO) document.getElementById('demoBar').innerHTML = `<div class="demo">체험 모드 · 이 기기에만 저장 · 마스터 비밀번호 ${DEMO_PW} · 예시 선생님 PIN 1234</div>`;
@@ -795,14 +805,38 @@ function viewSelector(){
     ${evs.map(e => `<button class="vbtn ev" aria-pressed="${S.view===e.id}" data-act="view" data-v="${e.id}"><span class="vs ${e.scope==='all'?'all':'d'}">${esc(scopeLabel(e.scope))}</span>${esc(e.name)}${evStatus(e)==='done'?' · 종료':evStatus(e)==='soon'?' · 예정':''}</button>`).join('')}
   </div>`;
 }
+function pickerView(list, wk){
+  const q = S.memberQ.trim();
+  const shown = q ? list.filter(m => m.name.includes(q)) : list;
+  const zero = list.filter(m => weekState(m,wk).used === 0).length;
+  return `<div class="stack">
+    <div class="sec-title"><div><h2>회원 선택</h2><div class="small muted">${list.length}명 · 이번 주 아직 스티커 없는 회원 ${zero}명</div></div>
+      <div style="flex:1;min-width:150px;max-width:240px"><input type="text" id="msq" data-in="memberQ" value="${esc(S.memberQ)}" placeholder="이름 검색" aria-label="회원 이름 검색"></div></div>
+    ${shown.length ? `<div class="mgrid">${shown.map(m => {
+      const ws = weekState(m, wk), b = boardCells(m);
+      const st = ws.used >= WEEK_MAX ? 'full' : ws.used === 0 ? 'zero' : '';
+      return `<button class="mcard ${st}" data-act="sel" data-v="${m.id}">
+        <span class="nm">${esc(m.name)}</span>
+        <span class="mini"><i style="width:${Math.round(b.cur.length/b.size*100)}%"></i></span>
+        <span class="small muted num">${b.boardNo}번째 판 ${b.cur.length}/${b.size}</span>
+        <span class="pill num ${st==='full'?'ok':st==='zero'?'warn':''}">${st==='full' ? '이번 주 완료' : st==='zero' ? '이번 주 아직' : `이번 주 ${ws.used}/${WEEK_MAX}`}</span>
+      </button>`; }).join('')}</div>`
+      : `<div class="card empty">‘${esc(q)}’ 회원이 없어요.</div>`}
+  </div>`;
+}
 function boardView(){
   const list = activeMembers();
   if (!list.length) return `<div class="card empty"><h3 style="color:var(--ink);margin-bottom:6px">아직 등록된 회원이 없어요</h3><p style="margin:0 0 14px">‘내 회원’에서 아이 이름을 등록하면 스티커판이 만들어져요.</p><button class="btn primary" data-act="tab" data-v="members">회원 등록하러 가기</button></div>`;
-  if (!S.sel || !list.find(m=>m.id===S.sel)) S.sel = list[0].id;
+  if (S.sel && !list.find(m=>m.id===S.sel)) S.sel = null;
   if (S.view !== 'all' && !S.tevents.find(e=>e.id===S.view)) S.view = 'all';
   const wk = weekKey(Date.now());
-  const chips = list.map(m => `<button class="chip" aria-pressed="${m.id===S.sel}" data-act="sel" data-v="${m.id}">${esc(m.name)}<span class="c num">${weekState(m,wk).used}/${WEEK_MAX}</span></button>`).join('');
-  const m = list.find(x=>x.id===S.sel);
+  if (!S.sel) return pickerView(list, wk);
+  const idx = list.findIndex(x=>x.id===S.sel), m = list[idx];
+  const prev = list[(idx - 1 + list.length) % list.length], next = list[(idx + 1) % list.length];
+  const chips = `<div class="navbar">
+      <button class="btn sm" data-act="back">← 회원 목록</button>
+      <div class="row" style="gap:6px">${list.length > 1 ? `<button class="btn sm" data-act="sel" data-v="${prev.id}" aria-label="이전 회원 ${esc(prev.name)}">‹ ${esc(prev.name)}</button><button class="btn sm" data-act="sel" data-v="${next.id}" aria-label="다음 회원 ${esc(next.name)}">${esc(next.name)} ›</button>` : ''}</div>
+    </div>`;
   const ev = S.view === 'all' ? null : S.tevents.find(e=>e.id===S.view);
   let boardHTML;
   if (!ev) {
@@ -842,7 +876,7 @@ function boardView(){
   const full = ws.used >= WEEK_MAX;
   const pend = S.pending ? CAT[S.pending] : null;
   return `<div class="stack">
-    <div class="chips" aria-label="회원 선택">${chips}</div>
+    ${chips}
     ${viewSelector()}
     ${boardHTML}
     <button class="btn primary" data-act="export">학부모에게 보내기</button>
@@ -1225,9 +1259,10 @@ async function act(a, v, el){
   const L = S.login;
   switch(a){
     case 'reload': S.loadErr=''; app.innerHTML = '<div class="empty">불러오는 중…</div>'; boot(); break;
-    case 'tab': S.tab = v; S.pending = null; render(); window.scrollTo(0,0); break;
+    case 'tab': if (v === 'board' && S.tab === 'board') S.sel = null; S.tab = v; S.pending = null; render(); window.scrollTo(0,0); break;
+    case 'back': S.sel = null; S.pending = null; render(); window.scrollTo(0,0); break;
     case 'atab': S.atab = v; S.tConfirm = null; S.adDel = null; S.evDel = null; render(); window.scrollTo(0,0); break;
-    case 'teacherOut': teacherOut(); render(); break;
+    case 'teacherOut': teacherOut(); S.sel = null; render(); break;
     case 'adminOut': adminOut(); render(); break;
     case 'refresh': run('불러오는 중…', async () => applyAdmin(await api('admin', A()))); break;
     case 'lmode': L.mode = v; L.err=''; L.pw=''; render(); break;
@@ -1246,7 +1281,7 @@ async function act(a, v, el){
         catch(e){ L.err = e.message; }
       });
       break;
-    case 'sel': S.sel = v; S.pending = null; render(); break;
+    case 'sel': S.sel = v; S.pending = null; S.memberQ = ''; render(); window.scrollTo(0,0); break;
     case 'view': S.view = v; render(); break;
     case 'boardAdd': run('추가 중…', async () => { applyMe(await api('memberBoard', {tid:S.tid, token:S.token, mid:S.sel, eid:v, delta:1})); toast('스티커판을 한 장 추가했어요'); }); break;
     case 'boardRemove': run('저장 중…', async () => { applyMe(await api('memberBoard', {tid:S.tid, token:S.token, mid:S.sel, eid:v, delta:-1})); }); break;
@@ -1364,7 +1399,7 @@ document.addEventListener('input', e => {
     else if (root === 'evForm') { S.evForm[sub] = v; if (e.target.type === 'date' || e.target.tagName === 'SELECT') render(); }
     else if (root === 'tForm') { S.tForm = S.tForm || {id:'', district:'', name:'', pin:''}; S.tForm[sub] = v; }
     else if (root === 'adForm') { S.adForm[sub] = v; }
-  } else { S[k] = v; if (k === 'recFilter' || k === 'aDistrict' || k === 'attQ') render(); }
+  } else { S[k] = v; if (k === 'recFilter' || k === 'aDistrict' || k === 'attQ' || k === 'memberQ') render(); }
 });
 document.addEventListener('keydown', e => {
   if (e.key === 'Enter' && e.target.classList?.contains('evcard')) { act('evPick', e.target.dataset.v, e.target); return; }
