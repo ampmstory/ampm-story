@@ -15,7 +15,7 @@
 :root{
   --bg:#F3F8EC; --bg2:#E3F1D3; --surface:#FFFFFF; --sunk:#F1F6EA; --line:#E1EAD5;
   --ink:#24321D; --muted:#6D7B64; --accent:#6DBB5A; --accent-ink:#FFFFFF; --accent-soft:#DDF0CF;
-  --sky:#D3EDF9; --sky-ink:#2A7CA5; --butter:#FFF2BF; --butter-ink:#94700C; --pink:#FDE0E6; --pink-ink:#C0425D;
+  --sky:#D3EDF9; --sky-ink:#2A7CA5; --butter:#FFF2BF; --butter-ink:#94700C; --pink:#FDE0E6; --pink-ink:#C0425D; --lav:#E9E3FB; --lav-ink:#5B4BB7;
   --gold:#F6C744; --mint:#5DB8E5; --coral:#F2849B;
   --ok:#3E9E4F; --warn:#C98A12; --bad:#D2455A;
   --shadow:0 4px 18px rgba(70,110,40,.08);
@@ -25,13 +25,13 @@
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#131911; --bg2:#1B2617; --surface:#1E271A; --sunk:#253020; --line:#33412D;
   --ink:#EAF2E2; --muted:#A3B29A; --accent:#8FD47B; --accent-ink:#13200E; --accent-soft:#2B3F24;
-  --sky:#1D3846; --sky-ink:#9AD6F2; --butter:#3B3317; --butter-ink:#F3D673; --pink:#43232B; --pink-ink:#F6A9B9;
+  --sky:#1D3846; --sky-ink:#9AD6F2; --butter:#3B3317; --butter-ink:#F3D673; --pink:#43232B; --pink-ink:#F6A9B9; --lav:#2E2846; --lav-ink:#C3B8F5;
   --gold:#F6C744; --mint:#6CC4EC; --coral:#F58FA5;
   --ok:#6FCF7E; --warn:#E8B44A; --bad:#F06B7F; --shadow:0 4px 18px rgba(0,0,0,.3); color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#131911; --bg2:#1B2617; --surface:#1E271A; --sunk:#253020; --line:#33412D;
   --ink:#EAF2E2; --muted:#A3B29A; --accent:#8FD47B; --accent-ink:#13200E; --accent-soft:#2B3F24;
-  --sky:#1D3846; --sky-ink:#9AD6F2; --butter:#3B3317; --butter-ink:#F3D673; --pink:#43232B; --pink-ink:#F6A9B9;
+  --sky:#1D3846; --sky-ink:#9AD6F2; --butter:#3B3317; --butter-ink:#F3D673; --pink:#43232B; --pink-ink:#F6A9B9; --lav:#2E2846; --lav-ink:#C3B8F5;
   --gold:#F6C744; --mint:#6CC4EC; --coral:#F58FA5;
   --ok:#6FCF7E; --warn:#E8B44A; --bad:#F06B7F; --shadow:0 4px 18px rgba(0,0,0,.3); color-scheme:dark}
 
@@ -236,6 +236,13 @@ tr.sub .heat i.h2{background:color-mix(in srgb,var(--accent) 60%,var(--surface))
 .mcard .mini{display:block;width:100%;height:8px;border-radius:4px;background:var(--sunk);overflow:hidden}
 .mcard .mini i{display:block;height:100%;background:var(--gold);border-radius:4px}
 .mcard.full .mini{background:var(--surface)}
+.vs.mine,.pill.mine{background:var(--lav,#E6E1FA);color:var(--lav-ink,#5B4BB7)}
+.vbtn.add{background:transparent;box-shadow:none;border:2px dashed var(--line);color:var(--muted)}
+.evhead.mine{background:linear-gradient(120deg,var(--lav,#E6E1FA),var(--sky))}
+.mcard.off{opacity:.55}
+.pickchips{display:flex;flex-wrap:wrap;gap:6px}
+.pchip{border:0;border-radius:999px;padding:7px 14px;font-weight:700;background:var(--sunk);color:var(--muted)}
+.pchip[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
 @media (prefers-reduced-motion:reduce){.cell.new{animation:none}.abtn:hover{transform:none}}
 </style>
 
@@ -287,6 +294,10 @@ function makeCore(st) {
   function pubT(t) { return { id: t.id, district: String(t.district), name: String(t.name), active: isActive(t), createdAt: +t.createdAt || 0 }; }
   function pubE(e) { return { id: e.id, name: String(e.name), scope: String(e.scope || 'all'), start: String(e.start), end: String(e.end), goal: +e.goal || 30, createdBy: String(e.createdBy || ''), createdAt: +e.createdAt || 0 }; }
   function parseExtra(v) { try { var o = typeof v === 'string' && v ? JSON.parse(v) : (v && typeof v === 'object' ? v : {}); return o && typeof o === 'object' ? o : {}; } catch (e) { return {}; } }
+  function pubB(b) {
+    var mem = 'all'; try { if (b.members && b.members !== 'all') mem = JSON.parse(b.members); } catch (e) { mem = 'all'; }
+    return { id: b.id, name: String(b.name), start: String(b.start), end: String(b.end || ''), goal: +b.goal || 30, members: mem, createdAt: +b.createdAt || 0 };
+  }
   function events() { return st.all('Events').filter(isActive).map(pubE).sort(function (a, b) { return a.start < b.start ? 1 : a.start > b.start ? -1 : 0; }); }
 
   function memberViews(members, awards) {
@@ -307,7 +318,9 @@ function makeCore(st) {
     var ms = st.all('Members').filter(function (m) { return m.teacherId === t.id; });
     var since = kstDate(Date.now() - 60 * 864e5);
     var evs = events().filter(function (e) { return (e.scope === 'all' || e.scope === String(t.district)) && e.end >= since; });
-    return { teacher: pubT(t), members: memberViews(ms, aw), events: evs, now: Date.now() };
+    var bds = st.all('Boards').filter(function (b) { return b.teacherId === t.id && isActive(b); }).map(pubB)
+      .sort(function (a, b) { return a.start < b.start ? 1 : a.start > b.start ? -1 : 0; });
+    return { teacher: pubT(t), members: memberViews(ms, aw), events: evs, boards: bds, now: Date.now() };
   }
   function teacherToken(t) { return tok('t:' + t.id + ':' + (t.pinHash || '')); }
   function teacherAuth(r) {
@@ -402,10 +415,45 @@ function makeCore(st) {
       return st.locked(function () {
         var m = st.all('Members').filter(function (x) { return x.id === r.mid && x.teacherId === t.id; })[0];
         if (!m) fail('회원을 찾을 수 없어요.');
-        if (!byId('Events', r.eid)) fail('행사를 찾을 수 없어요.');
+        var bd = byId('Boards', r.eid);
+        if (!byId('Events', r.eid) && !(bd && bd.teacherId === t.id)) fail('스티커판을 찾을 수 없어요.');
         var ex = parseExtra(m.extra), n = Math.max(0, Math.min(10, (+ex[r.eid] || 0) + (+r.delta < 0 ? -1 : 1)));
         if (n) ex[r.eid] = n; else delete ex[r.eid];
         m.extra = JSON.stringify(ex); st.update('Members', m);
+        return mePayload(t);
+      });
+    },
+
+    boardSave: function (r) {
+      var t = teacherAuth(r);
+      var name = clean(r.name, 30); if (!name) fail('스티커판 이름을 입력해 주세요.');
+      if (!isYmd(r.start)) fail('시작일을 골라 주세요.');
+      var end = r.end ? String(r.end) : '';
+      if (end && (!isYmd(end) || end < r.start)) fail('종료일을 확인해 주세요.');
+      var goal = Math.max(1, Math.min(300, parseInt(r.goal, 10) || 30));
+      var mine = st.all('Members').filter(function (m) { return m.teacherId === t.id; }).map(function (m) { return m.id; });
+      var members = 'all';
+      if (Array.isArray(r.members)) {
+        var ids = r.members.filter(function (id) { return mine.indexOf(id) >= 0; });
+        if (!ids.length) fail('대상 회원을 한 명 이상 골라 주세요.');
+        members = JSON.stringify(ids);
+      }
+      return st.locked(function () {
+        if (r.id) {
+          var b = byId('Boards', r.id); if (!b || b.teacherId !== t.id) fail('스티커판을 찾을 수 없어요.');
+          b.name = name; b.start = r.start; b.end = end; b.goal = goal; b.members = members; st.update('Boards', b);
+        } else {
+          st.append('Boards', { id: rid('b'), teacherId: t.id, name: name, start: r.start, end: end, goal: goal, members: members, createdAt: Date.now(), active: true });
+        }
+        return mePayload(t);
+      });
+    },
+
+    boardDelete: function (r) {
+      var t = teacherAuth(r);
+      return st.locked(function () {
+        var b = byId('Boards', r.id); if (!b || b.teacherId !== t.id) fail('스티커판을 찾을 수 없어요.');
+        b.active = false; st.update('Boards', b);
         return mePayload(t);
       });
     },
@@ -578,9 +626,9 @@ function demoCore(){
     mem = {Teachers:[
       {id:'t_demo1', district:'내외지구', name:'김민지', pinHash:h('ht_demo1:1234'), createdAt:now, active:true},
       {id:'t_demo2', district:'중앙지구', name:'이수진', pinHash:h('ht_demo2:1234'), createdAt:now, active:true}
-    ], Members:[], Awards:[], Admins:[], Events:[], Attends:[]};
+    ], Members:[], Awards:[], Admins:[], Events:[], Attends:[], Boards:[]};
   }
-  ['Teachers','Members','Awards','Admins','Events','Attends'].forEach(k => { mem[k] = mem[k] || []; });
+  ['Teachers','Members','Awards','Admins','Events','Attends','Boards'].forEach(k => { mem[k] = mem[k] || []; });
   const save = () => ls.set('stk_demo2', JSON.stringify(mem));
   const st = {
     all: n => mem[n].map(o => ({...o})),
@@ -620,7 +668,7 @@ const S = {
   addName:'', addSize:30, recFilter:'all', delConfirm:null,
   open:{}, aDistrict:'all', evSel:null, evForm:null, evDel:null,
   tForm:null, tConfirm:null, adForm:{name:'', pw:''}, adDel:null,
-  view:'all', attFilter:'elig', attQ:'', memberQ:''
+  view:'all', attFilter:'elig', attQ:'', memberQ:'', tboards:[], bForm:null, bDel:null
 };
 const app = document.getElementById('app'), tabsEl = document.getElementById('tabs'), whoEl = document.getElementById('who'), layer = document.getElementById('layer');
 if (DEMO) document.getElementById('demoBar').innerHTML = `<div class="demo">체험 모드 · 이 기기에만 저장 · 마스터 비밀번호 ${DEMO_PW} · 예시 선생님 PIN 1234</div>`;
@@ -674,12 +722,12 @@ function boardCells(m){
 const uniq = a => [...new Set(a)].sort((x,y)=>x.localeCompare(y,'ko'));
 const scopeLabel = sc => sc === 'all' ? '지국 전체' : sc;
 const scopePill = sc => `<span class="pill ${sc==='all'?'scope-all':'scope-d'}">${esc(scopeLabel(sc))}</span>`;
-function evStatus(e){ const t = today(); return t < e.start ? 'soon' : t > e.end ? 'done' : 'live'; }
+function evStatus(e){ const t = today(); return t < e.start ? 'soon' : t > (e.end || '9999-12-31') ? 'done' : 'live'; }
 const statusPill = e => { const s = evStatus(e); return s==='live' ? '<span class="pill live">진행 중</span>' : s==='soon' ? '<span class="pill soon">예정</span>' : '<span class="pill">종료</span>'; };
 
 // ---------- session ----------
 function applyMe(d){
-  S.teacher = d.teacher; S.members = d.members || []; S.tevents = d.events || [];
+  S.teacher = d.teacher; S.members = d.members || []; S.tevents = d.events || []; S.tboards = d.boards || [];
   if (d.token) { S.token = d.token; S.tid = d.teacher.id; ls.set('stk_sess', JSON.stringify({tid:S.tid, token:S.token})); }
   S.mode = 'teacher';
 }
@@ -691,7 +739,7 @@ function applyAdmin(d){
 }
 function teacherOut(){
   if (S.teacher) S.login.district = S.teacher.district;
-  S.mode = null; S.tid = null; S.token = null; S.teacher = null; S.members = []; S.tevents = []; S.pending = null;
+  S.mode = null; S.tid = null; S.token = null; S.teacher = null; S.members = []; S.tevents = []; S.tboards = []; S.pending = null;
   ls.set('stk_sess', null); S.login.pick = null; S.login.pin = ''; S.login.err = '';
 }
 function adminOut(){ S.atoken = null; S.aid = null; S.adm = null; ls.set('stk_asess', null); if (S.mode==='admin') S.mode = null; S.login.mode = 'pick'; S.login.pw=''; S.login.err=''; }
@@ -720,7 +768,7 @@ function render(){
   if (!S.loaded) return;
   renderTop();
   let html;
-  if (S.mode === 'teacher') html = S.tab === 'members' ? membersView() : S.tab === 'records' ? recordsView() : boardView();
+  if (S.mode === 'teacher') html = S.tab === 'members' ? membersView() : S.tab === 'records' ? recordsView() : S.tab === 'boards' ? boardsTabView() : boardView();
   else if (S.mode === 'admin') html = S.atab === 'events' ? eventsView() : S.atab === 'teachers' ? teachersView() : S.atab === 'admins' ? adminsView() : recentView();
   else html = S.login.mode === 'admin' ? adminLoginView() : loginView();
   const ae = document.activeElement; const fid = ae && ae.id && app.contains(ae) ? ae.id : null;
@@ -732,7 +780,7 @@ function render(){
 function renderTop(){
   let tabs = [];
   if (S.mode === 'teacher') {
-    tabs = [['board','스티커판'],['members','내 회원'],['records','기록']].map(([k,l]) => `<button class="tab" role="tab" aria-selected="${S.tab===k}" data-act="tab" data-v="${k}">${l}</button>`);
+    tabs = [['board','스티커판'],['boards','판 관리'],['members','회원'],['records','기록']].map(([k,l]) => `<button class="tab" role="tab" aria-selected="${S.tab===k}" data-act="tab" data-v="${k}">${l}</button>`);
     whoEl.innerHTML = `<span>${esc(tLabel(S.teacher))} 선생님</span><button class="linkbtn" data-act="teacherOut">나가기</button>`;
   } else if (S.mode === 'admin') {
     const list = [['recent','평소 현황'],['events','행사']];
@@ -780,15 +828,25 @@ function adminLoginView(){
 }
 
 // ----- teacher: board -----
+const rEnd = e => e.end || '9999-12-31';
+const periodTxt = e => `${fmtMD(e.start)} ~ ${e.end ? fmtMD(e.end) : '계속'}`;
+function viewList(m){
+  const bs = S.tboards.filter(b => !m || b.members === 'all' || (Array.isArray(b.members) && b.members.includes(m.id))).map(b => ({...b, kind:'board'}));
+  const es = S.tevents.map(e => ({...e, kind:'event'}));
+  const ord = x => evStatus(x)==='done' ? 2 : evStatus(x)==='soon' ? 1 : 0;
+  return [...bs.sort((a,b)=>ord(a)-ord(b)), ...es.sort((a,b)=>ord(a)-ord(b))];
+}
+function viewFor(m){ if (S.view === 'all') return null; return viewList(m).find(v => v.id === S.view) || null; }
 function evBoards(m, e){
   const seq = [];
-  m.awards.filter(a => { const d = kstDate(a.at); return d >= e.start && d <= e.end; })
+  m.awards.filter(a => { const d = kstDate(a.at); return d >= e.start && d <= rEnd(e); })
     .sort((a,b)=>a.at-b.at).forEach(a => { for (let i=0;i<(CAT[a.cat]?.n||0);i++) seq.push(CAT[a.cat].g); });
   const size = m.size || 30, n = seq.length, extra = +(m.extra?.[e.id] || 0);
   let need = Math.max(1, Math.ceil(n/size));
   if (n > 0 && n % size === 0 && evStatus(e) === 'live') need++;
   const count = Math.max(need, Math.ceil(n/size) + extra, 1 + extra);
-  const boards = Array.from({length:count}, (_,i) => ({label:`행사판 ${i+1}`, cur: seq.slice(i*size, (i+1)*size), size}));
+  const pre = e.kind === 'event' ? '행사판' : '판';
+  const boards = Array.from({length:count}, (_,i) => ({label:`${pre} ${i+1}`, cur: seq.slice(i*size, (i+1)*size), size}));
   const lastEmpty = boards.length > 1 && boards[boards.length-1].cur.length === 0;
   return {boards, n, size, extra, canRemove: extra > 0 && lastEmpty};
 }
@@ -797,28 +855,39 @@ function gridHTML(cur, size, animFrom){
   for (let i=0;i<size;i++){ const g = cur[i]; cells += g ? `<div class="cell on ${g}${animFrom!=null && i>=animFrom ? ' new':''}">${svg(g)}</div>` : `<div class="cell">${i+1}</div>`; }
   return `<div class="grid ${size===50?'g50':''}">${cells}</div>`;
 }
-function viewSelector(){
-  if (!S.tevents.length) return '';
-  const evs = [...S.tevents].sort((a,b)=> (evStatus(a)==='done') - (evStatus(b)==='done') || (a.start < b.start ? -1 : 1));
-  return `<div class="viewsel" role="tablist" aria-label="스티커판 보기">
-    <button class="vbtn" aria-pressed="${S.view==='all'}" data-act="view" data-v="all">전체 스티커판</button>
-    ${evs.map(e => `<button class="vbtn ev" aria-pressed="${S.view===e.id}" data-act="view" data-v="${e.id}"><span class="vs ${e.scope==='all'?'all':'d'}">${esc(scopeLabel(e.scope))}</span>${esc(e.name)}${evStatus(e)==='done'?' · 종료':evStatus(e)==='soon'?' · 예정':''}</button>`).join('')}
+const kindTag = v => v.kind === 'event' ? `<span class="vs ${v.scope==='all'?'all':'d'}">${esc(scopeLabel(v.scope))}</span>` : `<span class="vs mine">내 판</span>`;
+const kindPill = v => v.kind === 'event' ? scopePill(v.scope) : `<span class="pill mine">선생님 스티커판</span>`;
+function viewSelector(m){
+  const list = viewList(m);
+  const cur = m ? (viewFor(m)?.id || 'all') : S.view;
+  return `<div class="viewsel" role="tablist" aria-label="스티커판 고르기">
+    <button class="vbtn" aria-pressed="${cur==='all'}" data-act="view" data-v="all">전체 누적</button>
+    ${list.map(v => `<button class="vbtn" aria-pressed="${cur===v.id}" data-act="view" data-v="${v.id}">${kindTag(v)}${esc(v.name)}${evStatus(v)==='done'?' · 종료':evStatus(v)==='soon'?' · 예정':''}</button>`).join('')}
+    <button class="vbtn add" data-act="bNewGo">+ 판 만들기</button>
   </div>`;
 }
 function pickerView(list, wk){
   const q = S.memberQ.trim();
   const shown = q ? list.filter(m => m.name.includes(q)) : list;
   const zero = list.filter(m => weekState(m,wk).used === 0).length;
+  const gv = S.view === 'all' ? null : viewList(null).find(v=>v.id===S.view);
   return `<div class="stack">
     <div class="sec-title"><div><h2>회원 선택</h2><div class="small muted">${list.length}명 · 이번 주 아직 스티커 없는 회원 ${zero}명</div></div>
       <div style="flex:1;min-width:150px;max-width:240px"><input type="text" id="msq" data-in="memberQ" value="${esc(S.memberQ)}" placeholder="이름 검색" aria-label="회원 이름 검색"></div></div>
+    ${viewSelector(null)}
+    ${gv ? `<div class="small muted" style="margin-top:-4px">${esc(gv.name)} · ${periodTxt(gv)} 기준으로 보여요</div>` : ''}
     ${shown.length ? `<div class="mgrid">${shown.map(m => {
-      const ws = weekState(m, wk), b = boardCells(m);
+      const ws = weekState(m, wk);
       const st = ws.used >= WEEK_MAX ? 'full' : ws.used === 0 ? 'zero' : '';
-      return `<button class="mcard ${st}" data-act="sel" data-v="${m.id}">
+      const v = gv ? viewFor(m) : null;
+      let bar, line;
+      if (gv && !v) { bar = 0; line = '이 판 대상 아님'; }
+      else if (v) { const n = evBoards(m, v).n; bar = Math.round(Math.min(1, n/v.goal)*100); line = `${esc(v.name)} ${n}/${v.goal}`; }
+      else { const b = boardCells(m); bar = Math.round(b.cur.length/b.size*100); line = `${b.boardNo}번째 판 ${b.cur.length}/${b.size}`; }
+      return `<button class="mcard ${st}${gv && !v ? ' off' : ''}" data-act="sel" data-v="${m.id}">
         <span class="nm">${esc(m.name)}</span>
-        <span class="mini"><i style="width:${Math.round(b.cur.length/b.size*100)}%"></i></span>
-        <span class="small muted num">${b.boardNo}번째 판 ${b.cur.length}/${b.size}</span>
+        <span class="mini"><i style="width:${bar}%"></i></span>
+        <span class="small muted num">${line}</span>
         <span class="pill num ${st==='full'?'ok':st==='zero'?'warn':''}">${st==='full' ? '이번 주 완료' : st==='zero' ? '이번 주 아직' : `이번 주 ${ws.used}/${WEEK_MAX}`}</span>
       </button>`; }).join('')}</div>`
       : `<div class="card empty">‘${esc(q)}’ 회원이 없어요.</div>`}
@@ -826,23 +895,24 @@ function pickerView(list, wk){
 }
 function boardView(){
   const list = activeMembers();
-  if (!list.length) return `<div class="card empty"><h3 style="color:var(--ink);margin-bottom:6px">아직 등록된 회원이 없어요</h3><p style="margin:0 0 14px">‘내 회원’에서 아이 이름을 등록하면 스티커판이 만들어져요.</p><button class="btn primary" data-act="tab" data-v="members">회원 등록하러 가기</button></div>`;
+  if (!list.length) return `<div class="card empty"><h3 style="color:var(--ink);margin-bottom:6px">아직 등록된 회원이 없어요</h3><p style="margin:0 0 14px">‘회원’ 탭에서 아이 이름을 등록하면 스티커판이 만들어져요.</p><button class="btn primary" data-act="tab" data-v="members">회원 등록하러 가기</button></div>`;
   if (S.sel && !list.find(m=>m.id===S.sel)) S.sel = null;
-  if (S.view !== 'all' && !S.tevents.find(e=>e.id===S.view)) S.view = 'all';
+  if (S.view !== 'all' && !viewList(null).find(v=>v.id===S.view)) S.view = 'all';
   const wk = weekKey(Date.now());
   if (!S.sel) return pickerView(list, wk);
   const idx = list.findIndex(x=>x.id===S.sel), m = list[idx];
   const prev = list[(idx - 1 + list.length) % list.length], next = list[(idx + 1) % list.length];
-  const chips = `<div class="navbar">
+  const nav = `<div class="navbar">
       <button class="btn sm" data-act="back">← 회원 목록</button>
       <div class="row" style="gap:6px">${list.length > 1 ? `<button class="btn sm" data-act="sel" data-v="${prev.id}" aria-label="이전 회원 ${esc(prev.name)}">‹ ${esc(prev.name)}</button><button class="btn sm" data-act="sel" data-v="${next.id}" aria-label="다음 회원 ${esc(next.name)}">${esc(next.name)} ›</button>` : ''}</div>
     </div>`;
-  const ev = S.view === 'all' ? null : S.tevents.find(e=>e.id===S.view);
+  const ev = viewFor(m);
   let boardHTML;
   if (!ev) {
     const b = boardCells(m);
-    boardHTML = `<div class="board">
-      <div class="board-head"><div><div class="small muted">${b.boardNo}번째 판${b.boardsDone && !b.full ? ` · 완성 ${b.boardsDone}판` : ''}</div><h2>${esc(m.name)}의 칭찬스티커판</h2></div>
+    boardHTML = `${S.view !== 'all' ? `<div class="notice">${esc(m.name)}은(는) 고른 판의 대상이 아니라 전체 누적판을 보여줘요.</div>` : ''}
+    <div class="board">
+      <div class="board-head"><div><div class="small muted">전체 누적 · ${b.boardNo}번째 판${b.boardsDone && !b.full ? ` · 완성 ${b.boardsDone}판` : ''}</div><h2>${esc(m.name)}의 칭찬스티커판</h2></div>
         <div class="ring" style="--p:${Math.round(b.cur.length/b.size*100)}"><span><b class="num">${b.cur.length}</b><small class="num">/ ${b.size}</small></span></div></div>
       ${gridHTML(b.cur, b.size, S.newCells ? b.cur.length - S.newCells : null)}
       ${legend()}
@@ -851,15 +921,16 @@ function boardView(){
   } else {
     const E = evBoards(m, ev), st = evStatus(ev), pct = Math.min(100, Math.round(E.n/ev.goal*100));
     let lastNE = 0; E.boards.forEach((bd,i) => { if (bd.cur.length) lastNE = i; });
-    boardHTML = `<div class="evhead">
-        <div class="row between"><div class="row">${scopePill(ev.scope)}${statusPill(ev)}</div><span class="small num">${fmtMD(ev.start)} ~ ${fmtMD(ev.end)}</span></div>
+    const isEv = ev.kind === 'event';
+    boardHTML = `<div class="evhead ${isEv ? '' : 'mine'}">
+        <div class="row between"><div class="row">${kindPill(ev)}${statusPill(ev)}</div><span class="small num">${periodTxt(ev)}</span></div>
         <h2>${esc(ev.name)}</h2>
-        <div class="row between small"><span>${esc(m.name)} 행사 기간 스티커 · ${ev.goal}개 이상 시상</span><b class="num">${E.n} / ${ev.goal}개</b></div>
+        <div class="row between small"><span>${esc(m.name)} 기간 스티커 · ${isEv ? `${ev.goal}개 이상 시상` : `목표 ${ev.goal}개`}</span><b class="num">${E.n} / ${ev.goal}개</b></div>
         <div class="bar"><i style="width:${pct}%"></i></div>
-        ${st==='soon' ? `<div class="small">아직 행사 전이에요. ${fmtMD(ev.start)}부터 붙인 스티커가 여기에 모여요.</div>` : st==='done' ? `<div class="small">종료된 행사예요. 지금 붙이는 스티커는 이 판에 들어가지 않아요.</div>` : ''}
+        ${st==='soon' ? `<div class="small">아직 시작 전이에요. ${fmtMD(ev.start)}부터 붙인 스티커가 여기에 모여요.</div>` : st==='done' ? `<div class="small">기간이 끝났어요. 지금 붙이는 스티커는 이 판에 들어가지 않아요.</div>` : ''}
       </div>
       ${E.boards.map((bd,i) => `<div class="board">
-        <div class="board-head"><div><div class="small muted">${bd.label}</div><h2>${esc(m.name)}의 행사 스티커판</h2></div>
+        <div class="board-head"><div><div class="small muted">${bd.label}</div><h2>${esc(m.name)}의 ${isEv ? '행사 ' : ''}스티커판</h2></div>
           <div class="ring" style="--p:${Math.round(bd.cur.length/bd.size*100)}"><span><b class="num">${bd.cur.length}</b><small class="num">/ ${bd.size}</small></span></div></div>
         ${gridHTML(bd.cur, bd.size, S.newCells && i===lastNE ? bd.cur.length - S.newCells : null)}
         ${i===E.boards.length-1 ? legend() : ''}
@@ -875,14 +946,16 @@ function boardView(){
   const doneTxt = a => a ? `지급함 · ${CAT[a.cat].short} ${fmtTime(a.at)}` : '주 1회';
   const full = ws.used >= WEEK_MAX;
   const pend = S.pending ? CAT[S.pending] : null;
+  const liveIn = viewList(m).filter(v => evStatus(v) === 'live');
   return `<div class="stack">
-    ${chips}
-    ${viewSelector()}
+    ${nav}
+    ${viewSelector(m)}
     ${boardHTML}
     <button class="btn primary" data-act="export">학부모에게 보내기</button>
     <div class="card stack">
       <div class="week"><div><h3>이번 주 스티커</h3><div class="small muted">${fmtMD(wk)} ~ ${fmtMD(addDays(wk,6))} · 매주 월요일 초기화</div></div>
         <div class="row"><div class="meter">${meter}</div><b class="num">${ws.used}/${WEEK_MAX}</b></div></div>
+      ${liveIn.length ? `<div class="small muted">지금 붙이면 전체 누적판과 ${liveIn.map(v=>`‘${esc(v.name)}’`).join(', ')}에 함께 들어가요.</div>` : ''}
       <div class="agroup study"><div class="ahead"><h3><span class="ico sm study">${svg('study')}</span>교재풀이</h3><span class="small">${doneTxt(ws.study)}</span></div>
         <div class="abtns">${ab('study2','교재풀이 퍼펙트',!!ws.study||ws.used+2>WEEK_MAX)}${ab('study1','조금 밀렸어요',!!ws.study||full)}</div></div>
       <div class="agroup write"><div class="ahead"><h3><span class="ico sm write">${svg('write')}</span>글씨</h3><span class="small">${doneTxt(ws.write)}</span></div>
@@ -894,6 +967,41 @@ function boardView(){
     </div>
     ${pend ? `<div class="confirm" role="dialog" aria-label="스티커 확인"><p>${esc(m.name)}에게 ‘${esc(pend.label)}’ 스티커 ${pend.n}개를 붙일까요?</p>
       <button class="btn" data-act="cancel">취소</button><button class="btn primary" data-act="confirm">붙이기</button></div>` : ''}
+  </div>`;
+}
+
+// ----- teacher: my boards -----
+function boardsTabView(){
+  const f = S.bForm, mem = activeMembers();
+  const form = !f ? '' : `<div class="card stack">
+    <h3>${f.id ? '스티커판 수정' : '새 스티커판'}</h3>
+    <div class="field"><label for="bfn">판 이름</label><input type="text" id="bfn" data-in="bForm.name" value="${esc(f.name)}" maxlength="30" placeholder="예) 10~11월 약속판"></div>
+    <div class="row">
+      <div class="field"><label for="bfs">시작일</label><input type="date" id="bfs" data-in="bForm.start" value="${esc(f.start)}"></div>
+      <div class="field"><label for="bfe">종료일 (비우면 계속)</label><input type="date" id="bfe" data-in="bForm.end" value="${esc(f.end)}"></div>
+      <div class="field" style="max-width:130px"><label for="bfg">목표 개수</label><input type="number" id="bfg" min="1" max="300" data-in="bForm.goal" value="${esc(f.goal)}"></div>
+    </div>
+    <div class="field"><label>대상 회원</label>
+      <div class="seg"><button aria-pressed="${f.all}" data-act="bAll" data-v="1">전체 회원</button><button aria-pressed="${!f.all}" data-act="bAll" data-v="0">골라서</button></div></div>
+    ${f.all ? '' : `<div class="pickchips">${mem.map(m => `<button class="pchip" aria-pressed="${f.members.includes(m.id)}" data-act="bMem" data-v="${m.id}">${esc(m.name)}</button>`).join('')}</div>
+      <div class="small muted num">${f.members.length}명 선택</div>`}
+    <p class="small muted" style="margin:0">시작일 이전에 붙인 스티커도 기간 안이면 자동으로 들어가요. 지국 행사와 기간이 겹치면 같은 스티커가 양쪽 판에 모두 들어가요.</p>
+    <div class="row" style="justify-content:flex-end"><button class="btn" data-act="bClose">닫기</button><button class="btn primary" data-act="bSave">저장</button></div>
+  </div>`;
+  const bs = S.tboards;
+  const cnt = b => b.members === 'all' ? `전체 회원` : `${b.members.length}명`;
+  return `<div class="stack">
+    <div class="sec-title"><div><h2>판 관리</h2><div class="small muted">선생님이 아이들과 약속한 기간별 스티커판이에요</div></div>${f ? '' : `<button class="btn primary" data-act="bNew">+ 새 스티커판</button>`}</div>
+    ${form}
+    <div class="card">
+      <h3 style="margin-bottom:6px">내 스티커판 ${bs.length}개</h3>
+      ${bs.length ? `<div class="list">${bs.map(b => `<div class="li"><div class="main"><b>${esc(b.name)} ${statusPill(b)}</b><span class="small muted num">${periodTxt(b)} · 목표 ${b.goal}개 · ${cnt(b)}</span></div>
+        ${S.bDel===b.id ? `<button class="btn sm" data-act="bDelNo">아니요</button><button class="btn sm danger" data-act="bDelYes" data-v="${b.id}">삭제</button>` : `<button class="btn sm" data-act="bOpen" data-v="${b.id}">보기</button><button class="btn sm" data-act="bEdit" data-v="${b.id}">수정</button><button class="btn sm" data-act="bDelAsk" data-v="${b.id}">삭제</button>`}</div>`).join('')}</div>`
+        : `<div class="empty">아직 만든 판이 없어요. 예) 10월부터 11월까지 아이와 약속한 판을 만들어 보세요.</div>`}
+    </div>
+    ${S.tevents.length ? `<div class="card"><h3 style="margin-bottom:6px">지국·지구 행사</h3><div class="list">${S.tevents.map(e => `<div class="li"><div class="main"><b>${esc(e.name)}</b><span class="small muted num">${periodTxt(e)} · ${e.goal}개 이상 시상</span></div>${scopePill(e.scope)}${statusPill(e)}<button class="btn sm" data-act="bOpen" data-v="${e.id}">보기</button></div>`).join('')}</div>
+      <p class="small muted" style="margin:8px 0 0">행사는 관리자가 만들어요. 행사판은 따로 만들 필요 없이 자동으로 생겨요.</p></div>` : ''}
+    <p class="small muted" style="margin:0;text-align:center">판을 지워도 스티커 기록은 그대로 남아요.</p>
   </div>`;
 }
 
@@ -1202,7 +1310,7 @@ async function makeImage(spec){
   return await new Promise(res => cv.toBlob(res, 'image/png'));
 }
 function exportSpec(m){
-  const ev = S.view === 'all' ? null : S.tevents.find(e=>e.id===S.view);
+  const ev = viewFor(m);
   const dateTxt = kstDate(Date.now()).replace(/-/g,'.');
   if (!ev) {
     const b = boardCells(m);
@@ -1211,8 +1319,8 @@ function exportSpec(m){
   }
   const E = evBoards(m, ev);
   const boards = E.boards.filter((bd,i) => i===0 || bd.cur.length);
-  const inR = a => { const d = kstDate(a.at); return d >= ev.start && d <= ev.end; };
-  return {title:`${m.name}의 행사 스티커판`, sub:`${ev.name} · ${fmtMD(ev.start)}~${fmtMD(ev.end)}`, count:`${E.n} / ${ev.goal}`,
+  const inR = a => { const d = kstDate(a.at); return d >= ev.start && d <= rEnd(ev); };
+  return {title:`${m.name}의 ${ev.kind==='event'?'행사 ':''}스티커판`, sub:`${ev.name} · ${periodTxt(ev)}`, count:`${E.n} / ${ev.goal}`,
     boards, notes: m.awards.filter(a=>a.cat==='special' && a.note && inR(a)).sort((x,y)=>y.at-x.at).slice(0,2), file:`${m.name}_${ev.name}_${kstDate(Date.now())}.png`};
 }
 async function openExport(){
@@ -1283,6 +1391,25 @@ async function act(a, v, el){
       break;
     case 'sel': S.sel = v; S.pending = null; S.memberQ = ''; render(); window.scrollTo(0,0); break;
     case 'view': S.view = v; render(); break;
+    case 'bNewGo': S.tab = 'boards'; S.bForm = {id:'', name:'', start:today(), end:'', goal:30, all:true, members:[]}; render(); window.scrollTo(0,0); break;
+    case 'bNew': S.bForm = {id:'', name:'', start:today(), end:'', goal:30, all:true, members:[]}; render(); setTimeout(()=>document.getElementById('bfn')?.focus(),0); break;
+    case 'bEdit': { const b = S.tboards.find(x=>x.id===v); if (b) { S.bForm = {id:b.id, name:b.name, start:b.start, end:b.end, goal:b.goal, all:b.members==='all', members: b.members==='all' ? [] : [...b.members]}; render(); window.scrollTo(0,0); } break; }
+    case 'bClose': S.bForm = null; render(); break;
+    case 'bAll': S.bForm.all = v === '1'; render(); break;
+    case 'bMem': { const a2 = S.bForm.members; const i = a2.indexOf(v); i >= 0 ? a2.splice(i,1) : a2.push(v); render(); break; }
+    case 'bSave': {
+      const f = S.bForm; if (!f) return;
+      if (!f.name.trim()) { toast('판 이름을 입력해 주세요'); return; }
+      if (!f.start) { toast('시작일을 골라 주세요'); return; }
+      if (f.end && f.end < f.start) { toast('종료일이 시작일보다 빨라요'); return; }
+      if (!f.all && !f.members.length) { toast('대상 회원을 골라 주세요'); return; }
+      run('저장 중…', async () => { applyMe(await api('boardSave', {tid:S.tid, token:S.token, id:f.id, name:f.name, start:f.start, end:f.end, goal:f.goal, members: f.all ? 'all' : f.members})); S.bForm = null; toast('스티커판을 저장했어요'); });
+      break;
+    }
+    case 'bOpen': S.view = v; S.tab = 'board'; S.sel = null; render(); window.scrollTo(0,0); break;
+    case 'bDelAsk': S.bDel = v; render(); break;
+    case 'bDelNo': S.bDel = null; render(); break;
+    case 'bDelYes': run('삭제 중…', async () => { applyMe(await api('boardDelete', {tid:S.tid, token:S.token, id:v})); S.bDel = null; if (S.view === v) S.view = 'all'; toast('판을 삭제했어요. 스티커 기록은 그대로예요'); }); break;
     case 'boardAdd': run('추가 중…', async () => { applyMe(await api('memberBoard', {tid:S.tid, token:S.token, mid:S.sel, eid:v, delta:1})); toast('스티커판을 한 장 추가했어요'); }); break;
     case 'boardRemove': run('저장 중…', async () => { applyMe(await api('memberBoard', {tid:S.tid, token:S.token, mid:S.sel, eid:v, delta:-1})); }); break;
     case 'attFilter': S.attFilter = v; render(); break;
@@ -1399,6 +1526,7 @@ document.addEventListener('input', e => {
     else if (root === 'evForm') { S.evForm[sub] = v; if (e.target.type === 'date' || e.target.tagName === 'SELECT') render(); }
     else if (root === 'tForm') { S.tForm = S.tForm || {id:'', district:'', name:'', pin:''}; S.tForm[sub] = v; }
     else if (root === 'adForm') { S.adForm[sub] = v; }
+    else if (root === 'bForm') { S.bForm[sub] = v; }
   } else { S[k] = v; if (k === 'recFilter' || k === 'aDistrict' || k === 'attQ' || k === 'memberQ') render(); }
 });
 document.addEventListener('keydown', e => {
