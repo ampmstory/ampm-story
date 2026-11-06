@@ -243,6 +243,10 @@ tr.sub .heat i.h2{background:color-mix(in srgb,var(--accent) 60%,var(--surface))
 .pickchips{display:flex;flex-wrap:wrap;gap:6px}
 .pchip{border:0;border-radius:999px;padding:7px 14px;font-weight:700;background:var(--sunk);color:var(--muted)}
 .pchip[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.brand h1{white-space:nowrap}
+.brand{flex-wrap:wrap}
+.row > .field{min-width:140px}
+.tbtn small{color:inherit!important;opacity:.75}
 @media (prefers-reduced-motion:reduce){.cell.new{animation:none}.abtn:hover{transform:none}}
 </style>
 
@@ -332,21 +336,30 @@ function makeCore(st) {
   function adminToken(a) { return a.id === 'master' ? tok('admin:master:' + st.adminPw()) : tok('admin:' + a.id + ':' + a.pwHash); }
   function adminAuth(r, masterOnly) {
     var a;
-    if (r.aid === 'master') { if (!st.adminPw()) fail('마스터 비밀번호가 설정되지 않았어요.'); a = { id: 'master', name: '마스터', master: true }; }
-    else { var x = byId('Admins', r.aid); if (!x || !isActive(x)) fail('관리자 로그인이 필요해요.'); a = { id: x.id, name: String(x.name), pwHash: x.pwHash, master: false }; }
+    if (r.aid === 'master') { if (!st.adminPw()) fail('마스터 비밀번호가 설정되지 않았어요.'); a = { id: 'master', name: '마스터', master: true, district: masterDistrict() }; }
+    else { var x = byId('Admins', r.aid); if (!x || !isActive(x)) fail('관리자 로그인이 필요해요.'); a = { id: x.id, name: String(x.name), pwHash: x.pwHash, master: false, district: String(x.district || '') }; }
     if (r.atoken !== adminToken(a)) fail('관리자 로그인이 필요해요.');
     if (masterOnly && !a.master) fail('마스터 관리자만 할 수 있어요.');
     return a;
   }
+  function masterDistrict() { return String(st.getProp('MASTER_DISTRICT') || ''); }
+  function districtList() {
+    var set = {};
+    var md = masterDistrict(); if (md) set[md] = 1;
+    st.all('Admins').filter(isActive).forEach(function (x) { if (x.district) set[String(x.district)] = 1; });
+    st.all('Teachers').filter(isActive).forEach(function (t) { if (t.district) set[String(t.district)] = 1; });
+    return Object.keys(set).sort();
+  }
   function adminPayload(a) {
     var out = {
-      me: { id: a.id, name: a.name, master: a.master },
+      me: { id: a.id, name: a.name, master: a.master, district: a.district || '' },
+      districts: districtList(),
       teachers: st.all('Teachers').map(pubT),
       members: memberViews(st.all('Members'), st.all('Awards')),
       events: events(), now: Date.now()
     };
     out.attends = st.all('Attends').filter(isActive).map(function (x) { return { eventId: x.eventId, memberId: x.memberId, at: +x.at || 0, by: String(x.by || '') }; });
-    if (a.master) out.admins = st.all('Admins').filter(isActive).map(function (x) { return { id: x.id, name: String(x.name), createdAt: +x.createdAt || 0 }; });
+    if (a.master) out.admins = st.all('Admins').filter(isActive).map(function (x) { return { id: x.id, name: String(x.name), district: String(x.district || ''), createdAt: +x.createdAt || 0 }; });
     return out;
   }
 
@@ -354,7 +367,7 @@ function makeCore(st) {
     init: function () {
       return {
         teachers: st.all('Teachers').filter(isActive).map(pubT),
-        admins: [{ id: 'master', name: '마스터' }].concat(st.all('Admins').filter(isActive).map(function (x) { return { id: x.id, name: String(x.name) }; })),
+        admins: [{ id: 'master', name: '마스터', district: masterDistrict() }].concat(st.all('Admins').filter(isActive).map(function (x) { return { id: x.id, name: String(x.name), district: String(x.district || '') }; })),
         now: Date.now()
       };
     },
@@ -474,12 +487,12 @@ function makeCore(st) {
       if (r.aid === 'master') {
         if (!st.adminPw()) fail('마스터 비밀번호가 설정되지 않았어요. Code.gs 맨 위에서 설정해 주세요.');
         if (pw !== st.adminPw()) fail('비밀번호가 맞지 않아요.');
-        a = { id: 'master', name: '마스터', master: true };
+        a = { id: 'master', name: '마스터', master: true, district: masterDistrict() };
       } else {
         var x = byId('Admins', r.aid);
         if (!x || !isActive(x)) fail('관리자 정보를 찾을 수 없어요.');
         if (st.hash('admin:' + x.id + ':' + pw) !== x.pwHash) fail('비밀번호가 맞지 않아요.');
-        a = { id: x.id, name: String(x.name), pwHash: x.pwHash, master: false };
+        a = { id: x.id, name: String(x.name), pwHash: x.pwHash, master: false, district: String(x.district || '') };
       }
       var p = adminPayload(a); p.atoken = adminToken(a); p.aid = a.id; return p;
     },
@@ -489,8 +502,9 @@ function makeCore(st) {
     teacherSave: function (r) {
       var a = adminAuth(r, true);
       var district = clean(r.district, 20), name = clean(r.name, 12), pin = String(r.pin || '');
-      if (!district) fail('지구명을 입력해 주세요.');
+      if (!district) fail('지구를 선택해 주세요.');
       if (!name) fail('교사명을 입력해 주세요.');
+      if (districtList().indexOf(district) < 0) fail('등록된 지구에서 선택해 주세요. 지구는 관리자 탭에서 등록해요.');
       if (pin && !/^\d{4}$/.test(pin)) fail('PIN은 숫자 4자리예요.');
       return st.locked(function () {
         var dup = st.all('Teachers').some(function (t) { return t.id !== r.id && isActive(t) && String(t.district) === district && String(t.name) === name; });
@@ -519,13 +533,23 @@ function makeCore(st) {
 
     adminAdd: function (r) {
       var a = adminAuth(r, true);
-      var name = clean(r.name, 12), pw = String(r.pw || '');
+      var name = clean(r.name, 12), pw = String(r.pw || ''), district = clean(r.district, 20);
       if (!name) fail('관리자 이름을 입력해 주세요.');
       if (pw.length < 4) fail('비밀번호는 4자 이상으로 정해 주세요.');
       return st.locked(function () {
         if (name === '마스터' || st.all('Admins').some(function (x) { return isActive(x) && String(x.name) === name; })) fail('같은 이름의 관리자가 있어요.');
         var id = rid('ad');
-        st.append('Admins', { id: id, name: name, pwHash: st.hash('admin:' + id + ':' + pw), createdAt: Date.now(), active: true });
+        st.append('Admins', { id: id, name: name, pwHash: st.hash('admin:' + id + ':' + pw), createdAt: Date.now(), active: true, district: district });
+        return adminPayload(a);
+      });
+    },
+
+    adminDistrict: function (r) {
+      var a = adminAuth(r, true);
+      var district = clean(r.district, 20);
+      return st.locked(function () {
+        if (r.id === 'master') { st.setProp('MASTER_DISTRICT', district); a.district = district; }
+        else { var x = byId('Admins', r.id); if (!x) fail('관리자 정보를 찾을 수 없어요.'); x.district = district; st.update('Admins', x); }
         return adminPayload(a);
       });
     },
@@ -584,6 +608,7 @@ function makeCore(st) {
 <script>
 (() => {
 const DEMO = !API_URL || API_URL.indexOf('__API') === 0;
+const PAGE = (typeof PAGE_MODE !== 'undefined' && PAGE_MODE) || 'all';   // 'teacher' | 'admin' | 'all'
 const DEMO_PW = 'demo1234';
 const ICON = {
   study:'M12 2.5l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.3l-5.8 3.1 1.1-6.5L2.6 9.3l6.5-.9z',
@@ -636,7 +661,9 @@ function demoCore(){
     update: (n,o) => { const i = mem[n].findIndex(x=>x.id===o.id); if (i>=0) { mem[n][i] = {...o}; save(); } },
     locked: fn => fn(),
     hash: s => h('h'+s), hmac: s => h('k'+s),
-    adminPw: () => DEMO_PW
+    adminPw: () => DEMO_PW,
+    getProp: k => (mem.props || {})[k],
+    setProp: (k, v) => { mem.props = mem.props || {}; if (v) mem.props[k] = v; else delete mem.props[k]; save(); }
   };
   return (demoApi = makeCore(st));
 }
@@ -667,10 +694,11 @@ const S = {
   pending: null, specialNote:'', newCells:0, busy:false,
   addName:'', addSize:30, recFilter:'all', delConfirm:null,
   open:{}, aDistrict:'all', evSel:null, evForm:null, evDel:null,
-  tForm:null, tConfirm:null, adForm:{name:'', pw:''}, adDel:null,
+  tForm:null, tConfirm:null, adForm:{name:'', pw:'', district:''}, adDel:null, adEdit:null, adEditVal:'', admInit:false,
   view:'all', attFilter:'elig', attQ:'', memberQ:'', tboards:[], bForm:null, bDel:null
 };
 const app = document.getElementById('app'), tabsEl = document.getElementById('tabs'), whoEl = document.getElementById('who'), layer = document.getElementById('layer');
+if (PAGE === 'admin') { document.title = '칭찬스티커판 관리자'; document.querySelector('.brand h1').insertAdjacentHTML('beforeend', '<span class="pill mine" style="font-family:var(--body);font-size:12px">관리자</span>'); }
 if (DEMO) document.getElementById('demoBar').innerHTML = `<div class="demo">체험 모드 · 이 기기에만 저장 · 마스터 비밀번호 ${DEMO_PW} · 예시 선생님 PIN 1234</div>`;
 
 let toastTimer;
@@ -735,6 +763,7 @@ function applyAdmin(d){
   S.adm = d;
   if (d.atoken) { S.atoken = d.atoken; S.aid = d.aid; ls.set('stk_asess', JSON.stringify({aid:S.aid, atoken:S.atoken})); }
   S.mode = 'admin';
+  if (!S.admInit) { S.aDistrict = d.me.district && (d.districts||[]).includes(d.me.district) ? d.me.district : 'all'; S.admInit = true; }
   if (!d.me.master && (S.atab === 'teachers' || S.atab === 'admins')) S.atab = 'recent';
 }
 function teacherOut(){
@@ -742,13 +771,13 @@ function teacherOut(){
   S.mode = null; S.tid = null; S.token = null; S.teacher = null; S.members = []; S.tevents = []; S.tboards = []; S.pending = null;
   ls.set('stk_sess', null); S.login.pick = null; S.login.pin = ''; S.login.err = '';
 }
-function adminOut(){ S.atoken = null; S.aid = null; S.adm = null; ls.set('stk_asess', null); if (S.mode==='admin') S.mode = null; S.login.mode = 'pick'; S.login.pw=''; S.login.err=''; }
+function adminOut(){ S.admInit = false; S.aDistrict = 'all'; S.atoken = null; S.aid = null; S.adm = null; ls.set('stk_asess', null); if (S.mode==='admin') S.mode = null; S.login.mode = PAGE === 'admin' ? 'admin' : 'pick'; S.login.pw=''; S.login.err=''; }
 
 async function boot(){
   try {
     const d = await api('init'); S.teachers = d.teachers; S.admins = d.admins; S.loaded = true;
-    if (S.tid && S.token) { try { applyMe(await api('me', {tid:S.tid, token:S.token})); } catch { teacherOut(); } }
-    else if (S.atoken) { try { applyAdmin(await api('admin', {aid:S.aid, atoken:S.atoken})); } catch { adminOut(); } }
+    if (PAGE !== 'admin' && S.tid && S.token) { try { applyMe(await api('me', {tid:S.tid, token:S.token})); } catch { teacherOut(); } }
+    else if (PAGE !== 'teacher' && S.atoken) { try { applyAdmin(await api('admin', {aid:S.aid, atoken:S.atoken})); } catch { adminOut(); } }
   } catch(e){ S.loadErr = e.message; }
   render();
 }
@@ -770,7 +799,7 @@ function render(){
   let html;
   if (S.mode === 'teacher') html = S.tab === 'members' ? membersView() : S.tab === 'records' ? recordsView() : S.tab === 'boards' ? boardsTabView() : boardView();
   else if (S.mode === 'admin') html = S.atab === 'events' ? eventsView() : S.atab === 'teachers' ? teachersView() : S.atab === 'admins' ? adminsView() : recentView();
-  else html = S.login.mode === 'admin' ? adminLoginView() : loginView();
+  else html = (PAGE === 'admin' || (PAGE === 'all' && S.login.mode === 'admin')) ? adminLoginView() : loginView();
   const ae = document.activeElement; const fid = ae && ae.id && app.contains(ae) ? ae.id : null;
   const selr = fid && 'selectionStart' in ae ? [ae.selectionStart, ae.selectionEnd] : null;
   app.innerHTML = html;
@@ -786,7 +815,7 @@ function renderTop(){
     const list = [['recent','평소 현황'],['events','행사']];
     if (S.adm.me.master) list.push(['teachers','선생님'],['admins','관리자']);
     tabs = list.map(([k,l]) => `<button class="tab" role="tab" aria-selected="${S.atab===k}" data-act="atab" data-v="${k}">${l}</button>`);
-    whoEl.innerHTML = `<span>${S.adm.me.master ? '마스터 관리자' : esc(S.adm.me.name)+' 관리자'}</span><button class="linkbtn" data-act="refresh">새로고침</button><button class="linkbtn" data-act="adminOut">나가기</button>`;
+    whoEl.innerHTML = `<span>${S.adm.me.master ? '마스터' : esc(S.adm.me.name)} 관리자${S.adm.me.district ? ' · '+esc(S.adm.me.district) : ''}</span><button class="linkbtn" data-act="refresh">새로고침</button><button class="linkbtn" data-act="adminOut">나가기</button>`;
   } else whoEl.innerHTML = '';
   tabsEl.innerHTML = tabs.join('');
 }
@@ -814,16 +843,16 @@ function loginView(){
     </div>`;
   }
   return `<div class="stack"><div class="card">${form}</div>
-    <button class="linkbtn" data-act="lmode" data-v="admin" style="align-self:center">관리자 로그인</button></div>`;
+    ${PAGE === 'all' ? `<button class="linkbtn" data-act="lmode" data-v="admin" style="align-self:center">관리자 로그인</button>` : ''}</div>`;
 }
 function adminLoginView(){
   const L = S.login;
   return `<div class="card stack" style="max-width:440px;margin:0 auto;width:100%">
     <h2>관리자 로그인</h2>
-    <div class="tlist">${S.admins.map(a => `<button class="tbtn" aria-pressed="${L.apick===a.id}" data-act="apick" data-v="${a.id}">${esc(a.name)}</button>`).join('')}</div>
+    <div class="tlist">${S.admins.map(a => `<button class="tbtn" aria-pressed="${L.apick===a.id}" data-act="apick" data-v="${a.id}">${esc(a.name)}${a.district ? `<br><small class="muted" style="font-weight:500">${esc(a.district)}</small>` : ''}</button>`).join('')}</div>
     <div class="field"><label for="apw">비밀번호</label><input type="password" id="apw" data-in="login.pw" value="${esc(L.pw)}" autocomplete="current-password"></div>
     ${L.err ? `<div class="notice bad">${esc(L.err)}</div>` : ''}
-    <div class="row"><button class="btn primary" data-act="adminLogin">들어가기</button><button class="btn" data-act="lmode" data-v="pick">선생님 화면으로</button></div>
+    <div class="row"><button class="btn primary" data-act="adminLogin">들어가기</button>${PAGE === 'all' ? `<button class="btn" data-act="lmode" data-v="pick">선생님 화면으로</button>` : ''}</div>
   </div>`;
 }
 
@@ -1054,7 +1083,7 @@ function recordsView(){
 }
 
 // ----- admin helpers -----
-const admDistricts = () => uniq(S.adm.teachers.map(t=>t.district));
+const admDistricts = () => S.adm.districts || uniq(S.adm.teachers.map(t=>t.district));
 function admRows(weeks, inRange, onlyDistrict){
   const groups = {};
   S.adm.teachers.forEach(t => {
@@ -1083,8 +1112,9 @@ function heat(perW, weeks){
 }
 const wkHead = weeks => `<div class="wkhead">${weeks.map(w=>`<i>${fmtMD(w)}</i>`).join('')}</div>`;
 function districtFilter(){
-  const ds = admDistricts(); if (ds.length < 2) return '';
-  return `<div style="width:180px"><select id="adf" data-in="aDistrict" aria-label="지구 선택"><option value="all">전체 지구</option>${ds.map(d=>`<option ${S.aDistrict===d?'selected':''}>${esc(d)}</option>`).join('')}</select></div>`;
+  const ds = admDistricts(); if (!ds.length) return '';
+  const mine = S.adm.me.district;
+  return `<div style="width:200px"><select id="adf" data-in="aDistrict" aria-label="지구 선택"><option value="all" ${S.aDistrict==='all'?'selected':''}>전체 지구</option>${ds.map(d=>`<option value="${esc(d)}" ${S.aDistrict===d?'selected':''}>${esc(d)}${d===mine?' (내 지구)':''}</option>`).join('')}</select></div>`;
 }
 function groupTable(groups, weeks, opt){
   const cols = 6;
@@ -1206,31 +1236,34 @@ function eventsView(){
 
 // ----- admin: teachers (master) -----
 function teachersView(){
-  const f = S.tForm || {id:'', district:'', name:'', pin:''};
   const ds = admDistricts();
+  const defD = S.aDistrict !== 'all' ? S.aDistrict : (S.adm.me.district || '');
+  const f = S.tForm || {id:'', district: ds.includes(defD) ? defD : '', name:'', pin:''};
+  const opts = ds.includes(f.district) || !f.district ? ds : [f.district, ...ds];
   const cnt = {}; S.adm.members.forEach(m => { if (m.active) cnt[m.teacherId] = (cnt[m.teacherId]||0)+1; });
   const act = S.adm.teachers.filter(t=>t.active && (S.aDistrict==='all' || t.district===S.aDistrict));
-  const off = S.adm.teachers.filter(t=>!t.active);
+  const off = S.adm.teachers.filter(t=>!t.active && (S.aDistrict==='all' || t.district===S.aDistrict));
   const byD = {}; act.forEach(t => (byD[t.district] = byD[t.district] || []).push(t));
   return `<div class="stack">
     <div class="card stack">
       <h2>${f.id ? '선생님 정보 수정' : '선생님 등록'}</h2>
-      <div class="row">
-        <div class="field"><label for="tfd">지구명</label><input type="text" id="tfd" list="dlist" data-in="tForm.district" value="${esc(f.district)}" maxlength="20" placeholder="예) 내외지구"></div>
+      ${ds.length ? `<div class="row">
+        <div class="field"><label for="tfd">지구</label><select id="tfd" data-in="tForm.district"><option value="">지구 선택</option>${opts.map(d=>`<option value="${esc(d)}" ${f.district===d?'selected':''}>${esc(d)}</option>`).join('')}</select></div>
         <div class="field"><label for="tfn">교사명</label><input type="text" id="tfn" data-in="tForm.name" value="${esc(f.name)}" maxlength="12" placeholder="예) 김민지"></div>
         <div class="field" style="max-width:150px"><label for="tfp">PIN 4자리${f.id ? ' (바꿀 때만)' : ''}</label><input type="text" id="tfp" class="pin" inputmode="numeric" maxlength="4" data-in="tForm.pin" value="${esc(f.pin)}" autocomplete="off"></div>
       </div>
-      <datalist id="dlist">${ds.map(d=>`<option value="${esc(d)}">`).join('')}</datalist>
-      <div class="row between"><span class="small muted">PIN은 선생님이 새 기기에서 처음 들어올 때만 써요. 선생님께 따로 알려주세요.</span>
-        <div class="row">${f.id ? `<button class="btn" data-act="tFormReset">취소</button>` : ''}<button class="btn primary" data-act="tSave">${f.id ? '수정 저장' : '등록'}</button></div></div>
+      <div class="row between"><span class="small muted">지구는 관리자 탭에서 등록한 지구 중에서 골라요. PIN은 선생님이 새 기기에서 처음 들어올 때만 써요.</span>
+        <div class="row">${f.id ? `<button class="btn" data-act="tFormReset">취소</button>` : ''}<button class="btn primary" data-act="tSave">${f.id ? '수정 저장' : '등록'}</button></div></div>`
+      : `<div class="notice">먼저 <b>관리자</b> 탭에서 지구를 등록해 주세요. 마스터나 관리자의 담당 지구로 넣은 지구가 여기 목록에 나와요.</div>
+         <button class="btn primary" data-act="atab" data-v="admins" style="align-self:flex-start">관리자 탭으로</button>`}
     </div>
-    <div class="sec-title"><h3>선생님 ${act.length}명</h3>${districtFilter()}</div>
+    <div class="sec-title"><h3>${S.aDistrict==='all' ? '전체' : esc(S.aDistrict)} 선생님 ${act.length}명</h3>${districtFilter()}</div>
     <div class="card">
       ${act.length ? Object.keys(byD).sort((a,b)=>a.localeCompare(b,'ko')).map(d => `<div class="group-h">${esc(d)} · ${byD[d].length}명</div><div class="list">${byD[d].sort((a,b)=>a.name.localeCompare(b.name,'ko')).map(t => `
         <div class="li"><div class="main"><b>${esc(t.name)}</b><span class="small muted">회원 ${cnt[t.id]||0}명</span></div>
           ${S.tConfirm===t.id ? `<button class="btn sm" data-act="tOffNo">아니요</button><button class="btn sm danger" data-act="tOffYes" data-v="${t.id}">사용 중지</button>`
             : `<button class="btn sm" data-act="tEdit" data-v="${t.id}">수정·PIN 변경</button><button class="btn sm" data-act="tOffAsk" data-v="${t.id}">사용 중지</button>`}</div>`).join('')}</div>`).join('')
-        : `<div class="empty">위에서 첫 선생님을 등록하세요.</div>`}
+        : `<div class="empty">${S.aDistrict==='all' ? '위에서 첫 선생님을 등록하세요.' : `${esc(S.aDistrict)}에 등록된 선생님이 없어요.`}</div>`}
     </div>
     ${off.length ? `<div class="card"><h3 style="margin-bottom:6px">사용 중지한 선생님</h3><div class="list">${off.map(t=>`<div class="li"><div class="main"><b>${esc(t.district)} · ${esc(t.name)}</b><span class="small muted">기록은 그대로 보관돼요</span></div><button class="btn sm" data-act="tOn" data-v="${t.id}">다시 사용</button></div>`).join('')}</div></div>` : ''}
   </div>`;
@@ -1238,24 +1271,33 @@ function teachersView(){
 
 // ----- admin: admins (master) -----
 function adminsView(){
-  const f = S.adForm, list = S.adm.admins || [];
+  const f = S.adForm, list = S.adm.admins || [], ds = admDistricts();
+  const dPill = d => d ? `<span class="pill scope-d">${esc(d)}</span>` : `<span class="pill">전체</span>`;
+  const row = (id, name, d, sub, canDel) => `<div class="li"><div class="main"><b>${esc(name)} ${dPill(d)}</b><span class="small muted">${sub}</span></div>
+    ${S.adEdit===id ? `<div class="row" style="gap:6px;flex:1;min-width:220px"><input type="text" id="ade" list="adlist" data-in="adEditVal" value="${esc(S.adEditVal)}" maxlength="20" placeholder="지구명 (비우면 전체)" style="flex:1"><button class="btn sm" data-act="adEditNo">취소</button><button class="btn sm primary" data-act="adEditSave" data-v="${id}">저장</button></div>`
+      : S.adDel===id ? `<button class="btn sm" data-act="adDelNo">아니요</button><button class="btn sm danger" data-act="adDelYes" data-v="${id}">삭제</button>`
+      : `<button class="btn sm" data-act="adEditAsk" data-v="${id}">지구 변경</button>${canDel ? `<button class="btn sm" data-act="adDelAsk" data-v="${id}">삭제</button>` : ''}`}</div>`;
   return `<div class="stack">
     <div class="card stack">
       <h2>관리자 추가</h2>
-      <p class="small muted" style="margin:0">추가한 관리자는 평소 현황과 행사(지국·지구 모두)를 보고 만들 수 있어요. 선생님 등록과 관리자 추가는 마스터만 할 수 있어요.</p>
+      <p class="small muted" style="margin:0">관리자마다 담당 지구를 정하면 들어오자마자 그 지구 선생님만 보여요. 전체 보기로 바꿔서 다른 지구도 볼 수 있어요. 여기서 넣은 지구가 선생님 등록 때 지구 목록이 돼요.</p>
       <div class="row">
-        <div class="field"><label for="adn">관리자 이름</label><input type="text" id="adn" data-in="adForm.name" value="${esc(f.name)}" maxlength="12" placeholder="예) 박지국장"></div>
+        <div class="field"><label for="adn">관리자 이름</label><input type="text" id="adn" data-in="adForm.name" value="${esc(f.name)}" maxlength="12" placeholder="예) 박관리"></div>
         <div class="field"><label for="adp">비밀번호 (4자 이상)</label><input type="text" id="adp" data-in="adForm.pw" value="${esc(f.pw)}" maxlength="30" autocomplete="off"></div>
+        <div class="field"><label for="add">담당 지구 (비우면 전체)</label><input type="text" id="add" list="adlist" data-in="adForm.district" value="${esc(f.district||'')}" maxlength="20" placeholder="예) 내외지구"></div>
       </div>
+      <datalist id="adlist">${ds.map(d=>`<option value="${esc(d)}">`).join('')}</datalist>
       <div class="row" style="justify-content:flex-end"><button class="btn primary" data-act="adAdd">추가</button></div>
     </div>
     <div class="card">
       <h3 style="margin-bottom:6px">관리자 ${list.length + 1}명</h3>
       <div class="list">
-        <div class="li"><div class="main"><b>마스터</b><span class="small muted">비밀번호는 구글 앱스스크립트(Code.gs) 맨 위에서 바꿔요</span></div><span class="pill scope-all">마스터</span></div>
-        ${list.map(a => `<div class="li"><div class="main"><b>${esc(a.name)}</b><span class="small muted">추가 ${a.createdAt ? fmtMD(kstDate(a.createdAt)) : '-'}</span></div>
-          ${S.adDel===a.id ? `<button class="btn sm" data-act="adDelNo">아니요</button><button class="btn sm danger" data-act="adDelYes" data-v="${a.id}">삭제</button>` : `<button class="btn sm" data-act="adDelAsk" data-v="${a.id}">삭제</button>`}</div>`).join('')}
+        ${row('master', '마스터', S.adm.me.district, '비밀번호는 구글 앱스스크립트(Code.gs) 맨 위에서 바꿔요', false)}
+        ${list.map(a => row(a.id, a.name, a.district, `추가 ${a.createdAt ? fmtMD(kstDate(a.createdAt)) : '-'}`, true)).join('')}
       </div>
+    </div>
+    <div class="card"><h3 style="margin-bottom:6px">등록된 지구 ${ds.length}개</h3>
+      ${ds.length ? `<div class="pickchips">${ds.map(d=>`<span class="pill scope-d">${esc(d)}</span>`).join('')}</div>` : `<div class="small muted">아직 없어요. 마스터나 관리자에게 담당 지구를 넣으면 생겨요.</div>`}
     </div>
   </div>`;
 }
@@ -1482,8 +1524,10 @@ async function act(a, v, el){
     }
     // teachers (master)
     case 'tSave': {
-      const f = S.tForm || {id:'', district:'', name:'', pin:''};
-      if (!f.district.trim() || !f.name.trim()) { toast('지구명과 교사명을 입력해 주세요'); return; }
+      const ds0 = admDistricts(), defD = S.aDistrict !== 'all' ? S.aDistrict : (S.adm.me.district || '');
+      const f = S.tForm || {id:'', district: ds0.includes(defD) ? defD : '', name:'', pin:''};
+      if (!f.district) { toast('지구를 선택해 주세요'); return; }
+      if (!f.name.trim()) { toast('교사명을 입력해 주세요'); return; }
       if (!f.id && !/^\d{4}$/.test(f.pin)) { toast('PIN 숫자 4자리를 정해 주세요'); return; }
       if (f.id && f.pin && !/^\d{4}$/.test(f.pin)) { toast('PIN은 숫자 4자리예요'); return; }
       run('저장 중…', async () => { applyAdmin(await api('teacherSave', {...A(), ...f})); toast(f.id ? '수정했어요' : `${f.district} · ${f.name} 선생님을 등록했어요`); S.tForm = {id:'', district:f.district, name:'', pin:''}; S.teachers = (await api('init')).teachers; });
@@ -1500,7 +1544,13 @@ async function act(a, v, el){
       const f = S.adForm;
       if (!f.name.trim()) { toast('관리자 이름을 입력해 주세요'); return; }
       if (f.pw.length < 4) { toast('비밀번호는 4자 이상이에요'); return; }
-      run('저장 중…', async () => { applyAdmin(await api('adminAdd', {...A(), name:f.name, pw:f.pw})); toast(`${f.name} 관리자를 추가했어요`); S.adForm = {name:'', pw:''}; S.admins = (await api('init')).admins; });
+      run('저장 중…', async () => { applyAdmin(await api('adminAdd', {...A(), name:f.name, pw:f.pw, district:f.district||''})); toast(`${f.name} 관리자를 추가했어요`); S.adForm = {name:'', pw:'', district:''}; S.admins = (await api('init')).admins; });
+      break;
+    }
+    case 'adEditAsk': { S.adEdit = v; S.adDel = null; S.adEditVal = v === 'master' ? (S.adm.me.master ? S.adm.me.district : '') : ((S.adm.admins||[]).find(x=>x.id===v)?.district || ''); render(); setTimeout(()=>document.getElementById('ade')?.focus(),0); break; }
+    case 'adEditNo': S.adEdit = null; render(); break;
+    case 'adEditSave': {
+      run('저장 중…', async () => { applyAdmin(await api('adminDistrict', {...A(), id:v, district:S.adEditVal||''})); if (v === 'master') S.aDistrict = S.adm.me.district || 'all'; S.adEdit = null; S.admins = (await api('init')).admins; toast('담당 지구를 저장했어요'); });
       break;
     }
     case 'adDelAsk': S.adDel = v; render(); break;
@@ -1524,7 +1574,7 @@ document.addEventListener('input', e => {
   if (sub) {
     if (root === 'login') { S.login[sub] = v; if (sub === 'district') { S.login.pick = null; render(); } }
     else if (root === 'evForm') { S.evForm[sub] = v; if (e.target.type === 'date' || e.target.tagName === 'SELECT') render(); }
-    else if (root === 'tForm') { S.tForm = S.tForm || {id:'', district:'', name:'', pin:''}; S.tForm[sub] = v; }
+    else if (root === 'tForm') { if (!S.tForm) { const ds0 = admDistricts(), defD = S.aDistrict !== 'all' ? S.aDistrict : (S.adm.me.district || ''); S.tForm = {id:'', district: ds0.includes(defD) ? defD : '', name:'', pin:''}; } S.tForm[sub] = v; }
     else if (root === 'adForm') { S.adForm[sub] = v; }
     else if (root === 'bForm') { S.bForm[sub] = v; }
   } else { S[k] = v; if (k === 'recFilter' || k === 'aDistrict' || k === 'attQ' || k === 'memberQ') render(); }
