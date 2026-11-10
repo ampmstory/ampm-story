@@ -247,6 +247,12 @@ tr.sub .heat i.h2{background:color-mix(in srgb,var(--accent) 60%,var(--surface))
 .brand{flex-wrap:wrap}
 .row > .field{min-width:140px}
 .tbtn small{color:inherit!important;opacity:.75}
+.notes{background:var(--pink);border-radius:22px;padding:16px 18px;display:flex;flex-direction:column;gap:8px}
+.notes h3{font-size:18px;display:flex;align-items:center;gap:8px;color:var(--pink-ink)}
+.notes ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.notes li{display:flex;align-items:center;gap:10px;background:var(--surface);border-radius:14px;padding:10px 12px}
+.notes .nt{flex:1;min-width:0;font-weight:700;overflow-wrap:anywhere}
+.notes .small{color:var(--muted)}
 @media (prefers-reduced-motion:reduce){.cell.new{animation:none}.abtn:hover{transform:none}}
 </style>
 
@@ -922,6 +928,13 @@ function pickerView(list, wk){
       : `<div class="card empty">‘${esc(q)}’ 회원이 없어요.</div>`}
   </div>`;
 }
+function notesCard(m, ev){
+  const list = m.awards.filter(a => a.cat === 'special' && a.note && (!ev || (kstDate(a.at) >= ev.start && kstDate(a.at) <= rEnd(ev)))).sort((a,b)=>b.at-a.at);
+  if (!list.length) return '';
+  return `<div class="notes"><h3>선생님 칭찬 한마디 <span class="small num">${list.length}개</span></h3>
+    <ul>${list.slice(0,5).map(a => `<li><span class="ico sm special">${svg('special')}</span><span class="nt">${esc(a.note)}</span><span class="small num">${fmtMD(kstDate(a.at))}</span></li>`).join('')}</ul>
+    ${list.length > 5 ? `<div class="small">전체는 ‘기록’ 탭에서 볼 수 있어요</div>` : ''}</div>`;
+}
 function boardView(){
   const list = activeMembers();
   if (!list.length) return `<div class="card empty"><h3 style="color:var(--ink);margin-bottom:6px">아직 등록된 회원이 없어요</h3><p style="margin:0 0 14px">‘회원’ 탭에서 아이 이름을 등록하면 스티커판이 만들어져요.</p><button class="btn primary" data-act="tab" data-v="members">회원 등록하러 가기</button></div>`;
@@ -980,6 +993,7 @@ function boardView(){
     ${nav}
     ${viewSelector(m)}
     ${boardHTML}
+    ${notesCard(m, ev)}
     <button class="btn primary" data-act="export">학부모에게 보내기</button>
     <div class="card stack">
       <div class="week"><div><h3>이번 주 스티커</h3><div class="small muted">${fmtMD(wk)} ~ ${fmtMD(addDays(wk,6))} · 매주 월요일 초기화</div></div>
@@ -1309,7 +1323,12 @@ async function makeImage(spec){
   const geo = spec.boards.map(bd => { const cols = bd.size===50 ? 10 : 6, rows = Math.ceil(bd.size/cols), cellW = (W - padX*2 - gap*(cols-1)) / cols; return {cols, rows, cellW, h: labelH + rows*cellW + (rows-1)*gap}; });
   const gridsH = geo.reduce((s,g)=>s+g.h,0) + boardGap*(geo.length-1);
   const notes = spec.notes || [];
-  const H = Math.round(headH + gridsH + 120 + notes.length*64 + 130);
+  const mctx = document.createElement('canvas').getContext('2d'); mctx.font = '700 34px "Noto Sans KR", sans-serif';
+  const noteMax = W - padX*2 - 110;
+  const wrap = t => { const out = []; let line = ''; for (const ch of String(t)) { if (mctx.measureText(line + ch).width > noteMax && line && !'.,!?~)'.includes(ch)) { out.push(line); line = ch.trim() ? ch : ''; } else line += ch; } if (line) out.push(line); return out; };
+  const noteLines = notes.map(n => wrap(n.note));
+  const noteH = notes.length ? 110 + noteLines.reduce((a,l)=>a + l.length*48 + 22, 0) : 0;
+  const H = Math.round(headH + gridsH + 120 + noteH + 130);
   const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
   const x = cv.getContext('2d');
   const C = {bg:'#E3F1D3', paper:'#FFFFFF', band:'#DDF0CF', ink:'#24321D', muted:'#6D7B64', line:'#E1EAD5', accent:'#5FAE4C'};
@@ -1346,7 +1365,18 @@ async function makeImage(spec){
   x.font = '700 28px "Noto Sans KR", sans-serif';
   let lx = padX; [['study','교재풀이'],['write','글씨'],['special','특별']].forEach(([g,l]) => { x.beginPath(); x.arc(lx+14,y-10,14,0,Math.PI*2); x.fillStyle=col[g]; x.fill(); x.fillStyle=C.muted; x.fillText(l, lx+38, y); lx += 38 + x.measureText(l).width + 40; });
   y += 30;
-  notes.forEach(n => { y += 64; x.save(); const s = 1.5; x.translate(padX, y-30); x.scale(s,s); x.fillStyle = col.special; x.fill(paths.special); x.restore(); x.fillStyle = C.ink; x.font='700 32px "Noto Sans KR", sans-serif'; x.fillText(n.note, padX+56, y, W-padX*2-56); });
+  if (notes.length) {
+    const by = y + 20, bh = noteH - 30;
+    rr(padX - 10, by, W - padX*2 + 20, bh, 30); x.fillStyle = '#FDE0E6'; x.fill();
+    x.fillStyle = '#C0425D'; x.font = '700 30px "Noto Sans KR", sans-serif'; x.fillText('선생님 칭찬 한마디', padX + 24, by + 56);
+    let ny = by + 72;
+    noteLines.forEach(lines => {
+      x.save(); const sc = 1.4; x.translate(padX + 24, ny + 8); x.scale(sc, sc); x.fillStyle = col.special; x.fill(paths.special); x.restore();
+      x.fillStyle = C.ink; x.font = '700 34px "Noto Sans KR", sans-serif';
+      lines.forEach((ln, k) => x.fillText(ln, padX + 80, ny + 38 + k*48));
+      ny += lines.length*48 + 22;
+    });
+  }
   x.fillStyle = C.muted; x.font = '700 28px "Noto Sans KR", sans-serif'; x.textAlign='right';
   x.fillText(`${tLabel(S.teacher)} 선생님이 칭찬해요`, W-padX, H-90); x.textAlign='left';
   return await new Promise(res => cv.toBlob(res, 'image/png'));
@@ -1357,13 +1387,13 @@ function exportSpec(m){
   if (!ev) {
     const b = boardCells(m);
     return {title:`${m.name}의 칭찬스티커판`, sub:`${b.boardNo}번째 판 · ${dateTxt}`, count:`${b.cur.length} / ${b.size}`,
-      boards:[{label:'', cur:b.cur, size:b.size}], notes: m.awards.filter(a=>a.cat==='special' && a.note).sort((x,y)=>y.at-x.at).slice(0,2), file:`${m.name}_칭찬스티커_${kstDate(Date.now())}.png`};
+      boards:[{label:'', cur:b.cur, size:b.size}], notes: m.awards.filter(a=>a.cat==='special' && a.note).sort((x,y)=>y.at-x.at).slice(0,3), file:`${m.name}_칭찬스티커_${kstDate(Date.now())}.png`};
   }
   const E = evBoards(m, ev);
   const boards = E.boards.filter((bd,i) => i===0 || bd.cur.length);
   const inR = a => { const d = kstDate(a.at); return d >= ev.start && d <= rEnd(ev); };
   return {title:`${m.name}의 ${ev.kind==='event'?'행사 ':''}스티커판`, sub:`${ev.name} · ${periodTxt(ev)}`, count:`${E.n} / ${ev.goal}`,
-    boards, notes: m.awards.filter(a=>a.cat==='special' && a.note && inR(a)).sort((x,y)=>y.at-x.at).slice(0,2), file:`${m.name}_${ev.name}_${kstDate(Date.now())}.png`};
+    boards, notes: m.awards.filter(a=>a.cat==='special' && a.note && inR(a)).sort((x,y)=>y.at-x.at).slice(0,3), file:`${m.name}_${ev.name}_${kstDate(Date.now())}.png`};
 }
 async function openExport(){
   const m = S.members.find(x=>x.id===S.sel); if (!m) return;
@@ -1379,11 +1409,17 @@ async function openExport(){
     <h3>${esc(spec.title)}</h3>
     <img src="${url}" alt="${esc(m.name)}의 칭찬스티커판 이미지">
     ${canShare ? `<button class="btn primary" id="shareImg">카카오톡으로 보내기</button>` : ''}
+    ${spec.notes.length ? `<button class="btn" id="copyNote">칭찬 문구 복사</button>` : ''}
     ${dl ? `<button class="btn ${canShare?'':'primary'}" id="saveImg">이미지 저장</button>` : `<a class="btn ${canShare?'':'primary'}" href="${url}" download="${esc(fname)}" style="text-align:center;text-decoration:none">이미지 저장</a>`}
-    <p class="small muted" style="margin:0">${canShare ? '공유창에서 카카오톡을 고르고 학부모님 채팅방을 선택하세요.' : '저장한 이미지를 카카오톡 사진으로 보내세요. 저장이 안 되면 이미지를 길게 눌러 저장하세요.'}</p>
+    <p class="small muted" style="margin:0">${canShare ? '공유창에서 카카오톡을 고르고 학부모님 채팅방을 선택하세요.' : '저장한 이미지를 카카오톡 사진으로 보내세요. 저장이 안 되면 이미지를 길게 눌러 저장하세요.'}${spec.notes.length ? ' 칭찬 한마디는 이미지에 들어가 있고, ‘칭찬 문구 복사’로 글로도 붙여넣을 수 있어요.' : ''}</p>
     <button class="btn" data-act="closeModal">닫기</button></div></div>`;
   document.getElementById('shareImg')?.addEventListener('click', async () => {
     try { await navigator.share({files:[file], title:`${m.name} 칭찬스티커판`}); } catch(e){ if (e?.name !== 'AbortError') toast('공유하지 못했어요. 이미지 저장을 이용해 주세요'); }
+  });
+  document.getElementById('copyNote')?.addEventListener('click', async () => {
+    const txt = `[${m.name} 칭찬스티커판] ${spec.count.replace(/\s/g,'')}개\n\n선생님 칭찬 한마디\n` + spec.notes.map(n => `♥ ${n.note} (${fmtMD(kstDate(n.at))})`).join('\n') + `\n\n- ${tLabel(S.teacher)} 선생님`;
+    try { await navigator.clipboard.writeText(txt); toast('칭찬 문구를 복사했어요. 카톡에 붙여넣으세요'); }
+    catch { toast('복사할 수 없어요. 이미지를 보내 주세요'); }
   });
   document.getElementById('saveImg')?.addEventListener('click', async () => {
     try { await dl.save({filename:fname, data:blob}); toast('저장했어요'); } catch(e){ if (e?.code !== 'declined') toast('저장하지 못했어요. 이미지를 길게 눌러 저장해 주세요'); }
