@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>360° 상품 뷰어 체험｜내 캐릭터를 머그컵에 입혀보세요 - AMPM STORY</title>
+<meta name="description" content="손가락으로 돌려보는 3D 쇼핑 화면. 내 캐릭터·로고 이미지를 올리면 머그컵과 마우스패드에 바로 입혀서 360도로 확인할 수 있어요.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="내 캐릭터를 머그컵에 입혀보세요｜360° 상품 뷰어 체험">
+<meta property="og:description" content="손가락으로 돌려보는 3D 쇼핑 화면 — AI로 만든 상품 뷰어를 직접 체험해 보세요.">
+<meta property="og:image" content="https://ampmstory.com/360viewer/og.jpg">
+<meta property="og:url" content="https://ampmstory.com/360viewer/">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{--ink:#1d1f27;--sub:#6b7080;--line:#eceef3;--brand:#ff5a36;--chip:#f4f5f8;}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;background:#f2f3f6;font-family:'Noto Sans KR',sans-serif;color:var(--ink);}
+  .app{max-width:480px;margin:0 auto;background:#fff;min-height:100vh;position:relative;padding-bottom:96px;}
+  header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--line);position:sticky;top:0;background:#fff;z-index:5;}
+  header .logo{font-weight:900;letter-spacing:.5px;}
+  header .logo span{color:var(--brand);}
+  header .test{font-size:12px;color:#fff;background:#4a5568;border-radius:20px;padding:4px 10px;}
+  .tabs{display:flex;gap:8px;padding:12px 18px 0;}
+  .tabs button{flex:1;border:1px solid var(--line);background:#fff;border-radius:12px;padding:10px 0;font:inherit;font-weight:700;color:var(--sub);cursor:pointer;}
+  .tabs button.on{border-color:var(--ink);color:var(--ink);}
+  .stage{position:relative;margin:12px 18px 0;height:360px;border-radius:20px;overflow:hidden;background:radial-gradient(ellipse at 50% 40%,#ffffff 0%,#eef0f5 70%,#e3e6ee 100%);touch-action:none;}
+  .stage canvas{display:block;width:100%;height:100%;}
+  .badge360{position:absolute;top:12px;left:12px;background:rgba(29,31,39,.85);color:#fff;font-weight:700;font-size:13px;border-radius:20px;padding:5px 12px;}
+  .hint{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);background:rgba(255,255,255,.92);border:1px solid var(--line);border-radius:30px;padding:7px 14px;font-size:13px;color:var(--sub);white-space:nowrap;transition:opacity .4s;}
+  .ctrls{position:absolute;top:10px;right:10px;display:flex;flex-direction:column;gap:8px;}
+  .ctrls button{width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:#fff;font-size:16px;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.06);}
+  .ctrls button.on{background:var(--ink);color:#fff;}
+  .info{padding:18px;}
+  .cat{font-size:13px;color:var(--sub);}
+  .name{font-size:21px;font-weight:700;margin:4px 0 8px;line-height:1.35;}
+  .price{display:flex;align-items:baseline;gap:8px;}
+  .price .sale{color:var(--brand);font-weight:900;font-size:20px;}
+  .price .now{font-weight:900;font-size:22px;}
+  .price .was{color:#aab;text-decoration:line-through;font-size:14px;}
+  .stars{font-size:13px;color:var(--sub);margin-top:6px;}
+  .sec{border-top:8px solid #f4f5f8;padding:18px;}
+  .sec h4{margin:0 0 12px;font-size:16px;}
+  .swatches{display:flex;gap:12px;flex-wrap:wrap;}
+  .sw{width:40px;height:40px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px #d6d9e2;cursor:pointer;}
+  .sw.on{box-shadow:0 0 0 2px var(--ink);}
+  .swl{font-size:13px;color:var(--sub);margin-top:8px;}
+  .up{display:flex;gap:10px;align-items:center;}
+  .up label{flex:1;display:block;text-align:center;border:1.5px dashed #b9bfcc;border-radius:14px;padding:16px 10px;font-weight:700;color:var(--ink);cursor:pointer;background:#fafbfd;}
+  .up label small{display:block;font-weight:400;color:var(--sub);margin-top:4px;font-size:12px;}
+  .up button{border:1px solid var(--line);background:#fff;border-radius:14px;padding:16px 14px;font:inherit;font-size:13px;color:var(--sub);cursor:pointer;}
+  .up input{display:none;}
+  .tip{font-size:13px;color:var(--sub);line-height:1.6;margin-top:10px;}
+  .buy{position:fixed;left:0;right:0;bottom:0;display:flex;justify-content:center;pointer-events:none;}
+  .buy .in{max-width:480px;width:100%;background:#fff;border-top:1px solid var(--line);padding:12px 18px 16px;display:flex;gap:10px;pointer-events:auto;}
+  .buy button{border-radius:14px;font:inherit;font-weight:700;padding:15px 0;cursor:pointer;}
+  .buy .cart{flex:1;background:#fff;border:1px solid var(--ink);}
+  .buy .go{flex:2;background:var(--ink);color:#fff;border:0;}
+  .toast{position:fixed;left:50%;bottom:100px;transform:translateX(-50%) translateY(20px);background:rgba(29,31,39,.92);color:#fff;padding:12px 18px;border-radius:12px;font-size:14px;opacity:0;transition:.3s;pointer-events:none;white-space:nowrap;}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+</style>
+</head>
+<body>
+<div class="app">
+  <header><a class="logo" href="/" style="color:inherit;text-decoration:none;">AMPM <span>STORY</span></a><div class="test">체험판</div></header>
+  <div class="tabs"><button class="on" data-p="mug">☕ 머그컵</button><button data-p="pad">🖱️ 마우스패드</button></div>
+  <div class="stage" id="stage">
+    <div class="badge360">360° 돌려보기</div>
+    <div class="ctrls">
+      <button id="auto" class="on" title="자동 회전">⟳</button>
+      <button id="reset" title="처음 위치">⌂</button>
+    </div>
+    <div class="hint" id="hint">👆 손가락으로 돌리고, 두 손가락으로 확대해 보세요</div>
+  </div>
+  <div class="info">
+    <div class="cat" id="cat">캐릭터 굿즈 · 머그컵</div>
+    <div class="name" id="pname">나만의 디자인 머그컵 (330ml)</div>
+    <div class="price"><span class="sale">20%</span><span class="now" id="price">12,900원</span><span class="was" id="was">16,100원</span></div>
+    <div class="stars">체험용 예시 상품 · 실제 판매 상품이 아니에요</div>
+  </div>
+  <div class="sec">
+    <h4 id="colorTitle">컵 색상</h4>
+    <div class="swatches" id="swatches"></div>
+    <div class="swl" id="swl"></div>
+  </div>
+  <div class="sec">
+    <h4>내 디자인 입혀보기</h4>
+    <div class="up">
+      <label>🖼️ 이미지 올리기<small>PNG·JPG · 캐릭터, 로고, 사진 모두 OK</small><input type="file" id="file" accept="image/*"></label>
+      <button id="clear">기본 디자인</button>
+    </div>
+    <div class="tip">올린 이미지는 이 기기 안에서만 3D 상품에 입혀져요. 어디에도 저장되거나 전송되지 않아요.</div>
+  </div>
+  <div class="sec" style="font-size:13px;color:var(--sub);line-height:1.7;">
+    AI(클로드)와 Three.js로 만든 3D 상품 뷰어 체험판이에요.<br>
+    <a href="/" style="color:var(--ink);font-weight:700;">AMPM STORY 홈으로 →</a> · <a href="https://blog.naver.com/ampmstory365" style="color:var(--ink);font-weight:700;">블로그 보기 →</a>
+  </div>
+</div>
+<div class="buy"><div class="in"><button class="cart" data-t="장바구니">장바구니</button><button class="go" data-t="구매하기">구매하기</button></div></div>
+<div class="toast" id="toast"></div>
+
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}</script>
+<script type="module">
+import * as THREE from 'three';
+import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+import {RoomEnvironment} from 'three/addons/environments/RoomEnvironment.js';
+
+const stage=document.getElementById('stage');
+const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.05;
+stage.prepend(renderer.domElement);
+const scene=new THREE.Scene();
+const pmrem=new THREE.PMREMGenerator(renderer);
+scene.environment=pmrem.fromScene(new RoomEnvironment(),0.04).texture;
+const cam=new THREE.PerspectiveCamera(35,1,0.1,100);
+const controls=new OrbitControls(cam,renderer.domElement);
+controls.enableDamping=true;controls.dampingFactor=0.08;controls.enablePan=false;
+controls.minDistance=5;controls.maxDistance=13;controls.autoRotate=true;controls.autoRotateSpeed=2.2;
+const dl=new THREE.DirectionalLight(0xffffff,1.4);dl.position.set(4,6,5);scene.add(dl);
+scene.add(new THREE.HemisphereLight(0xffffff,0xdfe3ec,0.6));
+
+// soft floor shadow
+const shCanvas=document.createElement('canvas');shCanvas.width=shCanvas.height=256;
+{const x=shCanvas.getContext('2d');const g=x.createRadialGradient(128,128,10,128,128,128);g.addColorStop(0,'rgba(0,0,0,.28)');g.addColorStop(1,'rgba(0,0,0,0)');x.fillStyle=g;x.fillRect(0,0,256,256);}
+const shadow=new THREE.Mesh(new THREE.PlaneGeometry(1,1),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(shCanvas),transparent:true,depthWrite:false}));
+shadow.rotation.x=-Math.PI/2;scene.add(shadow);
+
+// ---- design canvas (shared) ----
+let userImg=null;
+function defaultArt(x,w,h){
+  x.save();
+  const g=x.createLinearGradient(0,0,w,h);g.addColorStop(0,'#ffd36b');g.addColorStop(1,'#ff8a65');
+  x.fillStyle=g;x.beginPath();x.roundRect(w*0.06,h*0.08,w*0.88,h*0.84,h*0.12);x.fill();
+  x.fillStyle='#fff';x.font=`900 ${h*0.2}px "Noto Sans KR",sans-serif`;x.textAlign='center';x.textBaseline='middle';
+  x.fillText('AMPM',w/2,h*0.42);
+  x.font=`700 ${h*0.1}px "Noto Sans KR",sans-serif`;x.fillText('내 디자인 넣기',w/2,h*0.66);
+  x.fillStyle='rgba(255,255,255,.85)';
+  [[.14,.22,.04],[.85,.25,.03],[.2,.78,.03],[.82,.76,.045]].forEach(([a,b,r])=>{star(x,w*a,h*b,h*r);});
+  x.restore();
+}
+function star(x,cx,cy,r){x.beginPath();for(let i=0;i<10;i++){const a=i*Math.PI/5-Math.PI/2,rr=i%2?r*.45:r;x.lineTo(cx+Math.cos(a)*rr,cy+Math.sin(a)*rr);}x.closePath();x.fill();}
+function drawContain(x,img,bx,by,bw,bh){const s=Math.min(bw/img.width,bh/img.height);const w=img.width*s,h=img.height*s;x.drawImage(img,bx+(bw-w)/2,by+(bh-h)/2,w,h);}
+
+// mug: printable band canvas 2048x900 wraps full circumference; design area = front ~45%
+const mugCanvas=document.createElement('canvas');mugCanvas.width=2048;mugCanvas.height=900;
+const mugTex=new THREE.CanvasTexture(mugCanvas);mugTex.colorSpace=THREE.SRGBColorSpace;mugTex.anisotropy=8;
+const padCanvas=document.createElement('canvas');padCanvas.width=1600;padCanvas.height=1300;
+const padTex=new THREE.CanvasTexture(padCanvas);padTex.colorSpace=THREE.SRGBColorSpace;padTex.anisotropy=8;
+
+const MUG_COLORS=[['화이트','#f7f7f4'],['크림','#f3e6cc'],['민트','#bfe6d8'],['핑크','#f6c9d3'],['네이비','#2b3557'],['블랙','#26272b']];
+const PAD_COLORS=[['화이트','#f7f7f4'],['라이트그레이','#d9dce3'],['스카이','#cfe3f7'],['라벤더','#ddd3f2'],['차콜','#3b3d44']];
+let mugColor=MUG_COLORS[0][1],padColor=PAD_COLORS[0][1];
+
+function paintMug(){
+  const x=mugCanvas.getContext('2d'),w=mugCanvas.width,h=mugCanvas.height;
+  x.fillStyle=mugColor;x.fillRect(0,0,w,h);
+  // front area centered at u=0.5
+  const bw=w*0.36,bh=h*0.78,bx=w*0.5-bw/2,by=(h-bh)/2;
+  if(userImg) drawContain(x,userImg,bx,by,bw,bh);
+  else{x.save();x.translate(bx,by);defaultArt(x,bw,bh);x.restore();}
+  mugTex.needsUpdate=true;
+}
+function paintPad(){
+  const x=padCanvas.getContext('2d'),w=padCanvas.width,h=padCanvas.height;
+  x.fillStyle=padColor;x.fillRect(0,0,w,h);
+  if(userImg){const s=Math.max(w/userImg.width,h/userImg.height);const iw=userImg.width*s,ih=userImg.height*s;x.drawImage(userImg,(w-iw)/2,(h-ih)/2,iw,ih);}
+  else defaultArt(x,w,h);
+  padTex.needsUpdate=true;
+}
+
+// ---- mug model ----
+const mug=new THREE.Group();
+const R=1.0,Hm=2.2,wall=0.08;
+const glaze=new THREE.MeshPhysicalMaterial({color:0xffffff,roughness:0.28,clearcoat:0.6,clearcoatRoughness:0.2});
+const outer=new THREE.Mesh(new THREE.CylinderGeometry(R,R*0.96,Hm,96,1,true,Math.PI,Math.PI*2),new THREE.MeshPhysicalMaterial({map:mugTex,roughness:0.3,clearcoat:0.6,clearcoatRoughness:0.2}));
+mug.add(outer);
+const innerMat=glaze.clone();
+const inner=new THREE.Mesh(new THREE.CylinderGeometry(R-wall,R*0.96-wall,Hm-0.02,96,1,true),innerMat);inner.material.side=THREE.BackSide;mug.add(inner);
+const rim=new THREE.Mesh(new THREE.RingGeometry(R-wall,R,96),innerMat.clone());rim.material.side=THREE.DoubleSide;rim.rotation.x=-Math.PI/2;rim.position.y=Hm/2;mug.add(rim);
+const bottomIn=new THREE.Mesh(new THREE.CircleGeometry(R-wall,64),innerMat);bottomIn.rotation.x=-Math.PI/2;bottomIn.position.y=-Hm/2+0.15;mug.add(bottomIn);
+const bottomOut=new THREE.Mesh(new THREE.CircleGeometry(R*0.96,64),innerMat);bottomOut.rotation.x=Math.PI/2;bottomOut.position.y=-Hm/2;mug.add(bottomOut);
+const handle=new THREE.Mesh(new THREE.TorusGeometry(0.52,0.11,24,64,Math.PI*1.25),innerMat);
+handle.rotation.z=-Math.PI*0.625;handle.position.set(R+0.18,0.05,0);mug.add(handle);
+scene.add(mug);
+
+// ---- mousepad model ----
+const pad=new THREE.Group();
+function rr(w,h,r){const s=new THREE.Shape();s.moveTo(-w/2+r,-h/2);s.lineTo(w/2-r,-h/2);s.quadraticCurveTo(w/2,-h/2,w/2,-h/2+r);s.lineTo(w/2,h/2-r);s.quadraticCurveTo(w/2,h/2,w/2-r,h/2);s.lineTo(-w/2+r,h/2);s.quadraticCurveTo(-w/2,h/2,-w/2,h/2-r);s.lineTo(-w/2,-h/2+r);s.quadraticCurveTo(-w/2,-h/2,-w/2+r,-h/2);return s;}
+const PW=3.2,PH=2.6,PT=0.12;
+const padShape=rr(PW,PH,0.22);
+const padBody=new THREE.Mesh(new THREE.ExtrudeGeometry(padShape,{depth:PT,bevelEnabled:true,bevelThickness:0.02,bevelSize:0.03,bevelSegments:3}),new THREE.MeshStandardMaterial({color:0x2a2b30,roughness:0.9}));
+padBody.rotation.x=-Math.PI/2;padBody.position.y=-PT/2;pad.add(padBody);
+const topGeo=new THREE.ShapeGeometry(padShape,24);
+{const p=topGeo.attributes.position,uv=topGeo.attributes.uv;for(let i=0;i<p.count;i++){uv.setXY(i,(p.getX(i)+PW/2)/PW,(p.getY(i)+PH/2)/PH);}}
+const padTop=new THREE.Mesh(topGeo,new THREE.MeshStandardMaterial({map:padTex,roughness:0.75}));
+padTop.rotation.x=-Math.PI/2;padTop.position.y=PT/2+0.031;pad.add(padTop);
+// stitched edge
+const edgePts=padShape.getSpacedPoints(200).map(v=>new THREE.Vector3(v.x*0.985,0,-v.y*0.985));
+const stitch=new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(edgePts),new THREE.LineDashedMaterial({color:0x777a85,dashSize:0.05,gapSize:0.035}));
+stitch.computeLineDistances();stitch.position.y=PT/2+0.035;pad.add(stitch);
+scene.add(pad);
+
+// ---- products ----
+const P={
+  mug:{obj:mug,cat:'캐릭터 굿즈 · 머그컵',name:'나만의 디자인 머그컵 (330ml)',price:'12,900원',was:'16,100원',colors:MUG_COLORS,title:'컵 색상',cam:[0.6,1.3,8],tgt:[0,0,0],shadow:[3.2,-1.12]},
+  pad:{obj:pad,cat:'캐릭터 굿즈 · 마우스패드',name:'나만의 디자인 마우스패드 (스티치 마감)',price:'9,900원',was:'12,400원',colors:PAD_COLORS,title:'바탕 색상',cam:[0,5.2,6.2],tgt:[0,0,0],shadow:[4.6,-0.1]},
+};
+let cur='mug';
+function setProduct(k){
+  cur=k;const p=P[k];
+  mug.visible=k==='mug';pad.visible=k==='pad';
+  document.getElementById('cat').textContent=p.cat;document.getElementById('pname').textContent=p.name;
+  document.getElementById('price').textContent=p.price;document.getElementById('was').textContent=p.was;
+  document.getElementById('colorTitle').textContent=p.title;
+  shadow.scale.setScalar(p.shadow[0]);shadow.position.y=p.shadow[1];
+  buildSwatches();resetView();
+  document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.p===k));
+}
+function buildSwatches(){
+  const box=document.getElementById('swatches');box.innerHTML='';
+  const list=P[cur].colors,curC=cur==='mug'?mugColor:padColor;
+  list.forEach(([n,c])=>{const d=document.createElement('div');d.className='sw'+(c===curC?' on':'');d.style.background=c;d.title=n;
+    d.onclick=()=>{if(cur==='mug'){mugColor=c;paintMug();innerMat.color.set(c);rim.material.color.set(c);}else{padColor=c;paintPad();}buildSwatches();};
+    box.appendChild(d);});
+  const sel=list.find(([,c])=>c===curC);document.getElementById('swl').textContent='선택: '+(sel?sel[0]:'');
+}
+function resetView(){const p=P[cur];cam.position.set(...p.cam);controls.target.set(...p.tgt);controls.update();}
+
+// ---- UI ----
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>setProduct(b.dataset.p));
+const autoBtn=document.getElementById('auto');
+autoBtn.onclick=()=>{controls.autoRotate=!controls.autoRotate;autoBtn.classList.toggle('on',controls.autoRotate);};
+document.getElementById('reset').onclick=resetView;
+document.getElementById('file').onchange=e=>{const f=e.target.files[0];if(!f)return;const url=URL.createObjectURL(f);const im=new Image();
+  im.onload=()=>{userImg=im;paintMug();paintPad();toast('내 디자인을 입혔어요! 돌려서 확인해 보세요');};im.src=url;};
+document.getElementById('clear').onclick=()=>{userImg=null;document.getElementById('file').value='';paintMug();paintPad();};
+document.querySelectorAll('.buy button').forEach(b=>b.onclick=()=>toast(`${b.dataset.t}는 체험판이라 동작하지 않아요`));
+let tt;function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('show'),2000);}
+const hint=document.getElementById('hint');
+controls.addEventListener('start',()=>{hint.style.opacity=0;});
+
+function resize(){const w=stage.clientWidth,h=stage.clientHeight;renderer.setSize(w,h,false);cam.aspect=w/h;cam.updateProjectionMatrix();}
+new ResizeObserver(resize).observe(stage);resize();
+document.fonts.ready.then(()=>{paintMug();paintPad();});
+paintMug();paintPad();setProduct('mug');
+renderer.setAnimationLoop(()=>{controls.update();renderer.render(scene,cam);});
+</script>
+</body>
+</html>
