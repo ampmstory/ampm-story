@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /eonadmin/
+
+Sitemap: https://ampmstory.com/sitemap.xml
