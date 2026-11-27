@@ -1,6 +1,12 @@
 {
-  "updated": "2026-11-26T04:10:35.328Z",
+  "updated": "2026-11-27T04:17:36.254Z",
   "items": [
+    {
+      "title": "당근카페란? 동네 이웃과 정보 나누는 법부터 카페 만들기까지",
+      "link": "https://blog.naver.com/ampmstory365/224493842556",
+      "date": "2026.11.27",
+      "thumb": "https://blogthumb.pstatic.net/MjAyNjExMjZfMjI3/MDAxNzk1NzA1MTkxMDA3.UbmJGy-6hGbxb5Nr4cTtQ_f9UgNEqEE9hgLhLop8G80g.cHVYxvF6bxXgkCKAaapxYERSpCoIEyAyB6LIaiinM_cg.PNG/00_thumbnail.png?type=s3"
+    },
     {
       "title": "크레파스 그림이 그려지는 영상 만들기, AI로 두 가지 방법 비교해봤어요",
       "link": "https://blog.naver.com/ampmstory365/224492732192",
@@ -12,12 +18,6 @@
       "link": "https://blog.naver.com/ampmstory365/224492135400",
       "date": "2026.11.25",
       "thumb": "https://blogthumb.pstatic.net/MjAyNjExMjVfNjcg/MDAxNzk1NjEyNDYwNjQ3.eGE9YmZtv3UpgVfiX_eHB2rFDuVNJcu5Xf-ec9PhlEYg.6uVq2HN3vMIQ8YfpPh-WWB2CeO6x0oGIyUn3XzjEfG4g.PNG/img00_%BD%E6%B3%D7%C0%CF_1x1.png?type=s3"
-    },
-    {
-      "title": "GPT vs 클로드, 같은 노래로 뮤직비디오 만들기 대결! 영상 AI 없이 가능할까?",
-      "link": "https://blog.naver.com/ampmstory365/224487652502",
-      "date": "2026.11.23",
-      "thumb": "https://blogthumb.pstatic.net/MjAyNjExMjNfMjkw/MDAxNzk1MzYzMDExMjI3.UVK1uzvKt-SWP-5IGZOj1d_RSuHxDL70FG2wMt8l944g.Hi_7A4lCKwMARS06i7L79yq2_axe2GnZzxlqLNjAABUg.JPEG/thumb_title_1x1.jpg?type=s3"
     }
   ]
 }
