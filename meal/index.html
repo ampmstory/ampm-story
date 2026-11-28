@@ -1201,10 +1201,11 @@ function rcDictItems(lines){const seen=new Set(),out=[];lines.forEach(l=>{if(/�
   const toks=c.split(/\s+/).filter(Boolean);if(!name)for(const [w] of KWLIST){if(w.length>=2&&toks.some(t=>t.includes(w))){name=w;break}}
   if(name&&!seen.has(name)){seen.add(name);out.push({name,on:true})}});return out}
 
-function rcDate(t){let m=t.match(/(20\d{2})\s*[.\-\/년]\s*(\d{1,2})\s*[.\-\/월]\s*(\d{1,2})/);if(!m){const k=t.match(/(?<!\d)(\d{2})-(\d{1,2})-(\d{1,2})(?!\d)/);if(k)m=[0,"20"+k[1],k[2],k[3]]}
-  if(!m)return today();const d=new Date(+m[1],+m[2]-1,+m[3]);return !isNaN(d)&&d<=new Date()&&+m[1]>=2020?iso(d):today()}
+function rcDate(t){const now=new Date();for(const m of String(t).matchAll(/(\d{2,4})\s*[.\-\/년]\s*(\d{1,2})\s*[.\-\/월]\s*(\d{1,2})(?!\d)/g)){
+    const y=2000+(+m[1].slice(-2)),mo=+m[2],da=+m[3];if(mo<1||mo>12||da<1||da>31)continue;const d=new Date(y,mo-1,da);if(isNaN(d)||d>now||(now-d)/864e5>400)continue;return iso(d)}
+  return today()}
 function rcStore(lines){const h=lines.find(l=>/상\s*[호흐]/.test(l));let s=h?h.replace(/.*상\s*[호흐]\s*[:;]?/,""):(lines.find(l=>/마트|마드|마켓|농협|다이소|상회|식자|슈퍼|편의|하나로|홈플|코스트|정육|베이커리|빵/.test(l))||"");
-  return s.replace(/[^가-힣A-Za-z0-9 ]/g," ").replace(/\s+/g," ").trim().split(" ").filter(w=>w.length>1).join(" ").slice(0,20)}
+  return s.replace(/[^가-힣A-Za-z0-9 ]/g," ").replace(/\s+/g," ").trim().split(" ").filter(w=>w.length>1).join(" ").replace(/[0-9A-Za-z]+$/,"").trim().slice(0,20)}
 function parseOCR(t){const L=rcNorm(t).split(/\r?\n/).map(x=>x.trim()).filter(Boolean);return{store:rcStore(L),date:rcDate(t),total:rcTotal(L),pay:/현금/.test(t)&&!/카드|신용/.test(t)?"현금":"카드",items:rcDictItems(L)}}
 
 const OCR_BASE=window.AMPM_SALE===true?"ocr/":null;let OCRW=null;
@@ -1216,11 +1217,17 @@ async function heicToJpeg(file){if(!window.heic2any)await loadScript(OCR_BASE+"h
 async function decodeImg(file){try{return await createImageBitmap(file)}catch(e){}
   if(OCR_BASE&&isHeic(file)){try{rcMsg("아이폰 사진(HEIC)을 변환하는 중…");const j=await heicToJpeg(file);return await createImageBitmap(j)}catch(e){}}
   return await new Promise((res,rej)=>{const u=URL.createObjectURL(file),im=new Image();im.onload=()=>{res(im)};im.onerror=()=>{URL.revokeObjectURL(u);rej(new Error("img-decode"))};im.src=u})}
+async function ocrPrep(file,max){const img=await decodeImg(file);const k=Math.min(1,max/Math.max(img.width,img.height));const c=document.createElement("canvas");c.width=Math.round(img.width*k);c.height=Math.round(img.height*k);
+  const x=c.getContext("2d",{willReadFrequently:true});x.drawImage(img,0,0,c.width,c.height);const d=x.getImageData(0,0,c.width,c.height),p=d.data,n=p.length/4,h=new Uint32Array(256),g=new Uint8Array(n);
+  for(let i=0;i<n;i++){const v=(p[i*4]*.299+p[i*4+1]*.587+p[i*4+2]*.114)|0;g[i]=v;h[v]++}
+  let lo=0,hi=255,acc=0;const cut=n*.01;for(;lo<255;lo++){acc+=h[lo];if(acc>cut)break}acc=0;for(;hi>0;hi--){acc+=h[hi];if(acc>cut)break}const sc=hi>lo?255/(hi-lo):1;
+  for(let i=0;i<n;i++){const v=Math.max(0,Math.min(255,(g[i]-lo)*sc));p[i*4]=p[i*4+1]=p[i*4+2]=v}x.putImageData(d,0,0);
+  return await new Promise(r=>c.toBlob(r,"image/png"))}
 async function shrinkTo(file,max){const img=await decodeImg(file);const k=Math.min(1,max/Math.max(img.width,img.height));const c=document.createElement("canvas");c.width=Math.round(img.width*k);c.height=Math.round(img.height*k);c.getContext("2d").drawImage(img,0,0,c.width,c.height);return await new Promise(r=>c.toBlob(r,"image/jpeg",.9))}
 async function rcLocalPhoto(file){V.rc.busy=true;rcMsg("영수증 글자를 읽는 중… (처음 한 번은 인식 데이터를 받느라 조금 더 걸려요)");renderAll();
   let stage="준비";
   try{const w=await ocrWorker(m=>{if(m&&m.status==="recognizing text")rcMsg(`글자 읽는 중… ${Math.round((m.progress||0)*100)}%`);else if(m&&/load|initializ/.test(m.status||""))rcMsg("인식 준비 중… "+Math.round((m.progress||0)*100)+"%")});
-    stage="사진 열기";const blob=await shrinkTo(file,2000);if(!blob)throw new Error("no-blob");stage="읽기";const res=await w.recognize(blob);const text=(res&&res.data&&res.data.text)||"";
+    stage="사진 열기";const blob=await ocrPrep(file,1800);if(!blob)throw new Error("no-blob");stage="읽기";await w.setParameters({tessedit_pageseg_mode:"6",preserve_interword_spaces:"1"});const res=await w.recognize(blob);const text=(res&&res.data&&res.data.text)||"";
     const r=parseOCR(text);r.cat=V.rc.cat;V.rc.text=text;V.rc.parsed=Object.assign(V.rc.parsed||{},r);
     V.rc.msg=r.total?"읽은 내용을 확인하세요. 빠진 품목은 위 글자 칸에서 확인할 수 있어요":"합계를 못 읽었어요. 금액을 직접 넣어주세요"}
   catch(e){OCRW=stage==="준비"?null:OCRW;const why=String(e&&(e.message||e)).slice(0,80);
