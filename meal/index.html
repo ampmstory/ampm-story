@@ -1175,7 +1175,42 @@ function parseReceipt(text){
 let RC_CAP=null;async function rcCheck(){if(RC_CAP&&RC_CAP.st!=="none")return RC_CAP;let st="none",sm=null,why="";try{if(window.claude&&typeof window.claude.use==="function"){sm=await window.claude.use("sample");if(sm){st="ok";if(typeof sm.limits==="function"){try{const lim=await sm.limits();if(lim&&lim.images===false){st="noimg"}}catch(e){why=String(e&&e.message||e)}}}else why="sample=null"}else why="no claude.use"}catch(e){why=String(e&&e.message||e)}RC_CAP={st,sm:st==="ok"?sm:null,why};return RC_CAP}
 async function rcSample(){const c=await rcCheck();return c.sm}
 async function shrink(file){const img=await createImageBitmap(file);const k=Math.min(1,1600/Math.max(img.width,img.height));const c=document.createElement("canvas");c.width=Math.round(img.width*k);c.height=Math.round(img.height*k);c.getContext("2d").drawImage(img,0,0,c.width,c.height);return await new Promise(r=>c.toBlob(r,"image/jpeg",.85))}
+/* ---------- 기기 안 글자 인식 (판매판) ---------- */
+const RC_PAYKW=/지\s*불|신\s*용|카\s*드|결\s*제|승\s*인|받\s*[은을]|내\s*실|청\s*구/;
+const RC_TOTKW=/합\s*[계겨게]|판\s*매\s*[합금]|총\s*[액결합]|받\s*[은을]|내\s*실|결\s*제|지\s*불|승\s*인\s*금|신\s*용|청\s*구/;
+const RC_NOTTOT=/면\s*세|과\s*세|부\s*가|할\s*인|포\s*인|적\s*립|공\s*급|혜\s*택|잔\s*여|가\s*용|단\s*가/;
+function rcNorm(t){return String(t||"").replace(/(\d)\s*[,.]\s*(\d{3})(?!\d)/g,"$1,$2")}
+const rcAmts=l=>(l.match(/\d{1,3}(?:,\d{3})+(?!\d)/g)||[]).map(x=>+x.replace(/,/g,"")).filter(n=>n>=100&&n<10000000);
+function rcTotal(lines){const sc=new Map();lines.forEach(l=>{if(!RC_TOTKW.test(l)||RC_NOTTOT.test(l))return;const pay=RC_PAYKW.test(l);rcAmts(l).forEach(n=>{const s=sc.get(n)||0;sc.set(n,s+10+(pay?3:0))})});
+  if(!sc.size){const cnt=new Map();lines.forEach(l=>{if(RC_NOTTOT.test(l))return;rcAmts(l).forEach(n=>cnt.set(n,(cnt.get(n)||0)+1))});cnt.forEach((c,n)=>sc.set(n,c*10+n/1e7))}
+  let best=0,bs=-1;sc.forEach((s,n)=>{if(s>bs||(s===bs&&n>best)){bs=s;best=n}});return best}
+const RC_ALIAS=[["너구리","라면"],["신라면","라면"],["짜파게티","라면"],["진라면","라면"],["안성탕면","라면"],["감귤","귤"],["햇반","즉석밥"],["즉석밥","즉석밥"],["콜라","콜라"],["사이다","사이다"],["맥주","맥주"],["잡채","잡채"]];
+function rcDictItems(lines){const seen=new Set(),out=[];lines.forEach(l=>{if(/주\s*소|전\s*화|대\s*표|사업자|홈페이지|회원|고객|포인트|영업/.test(l))return;
+  const c=l.replace(/[^가-힣a-zA-Z\s]/g," ");let name=null;
+  for(const [w,to] of RC_ALIAS)if(c.replace(/\s/g,"").includes(w)){name=to;break}
+  const toks=c.split(/\s+/).filter(Boolean);if(!name)for(const [w] of KWLIST){if(w.length>=2&&toks.some(t=>t.includes(w))){name=w;break}}
+  if(name&&!seen.has(name)){seen.add(name);out.push({name,on:true})}});return out}
+
+function rcDate(t){let m=t.match(/(20\d{2})\s*[.\-\/년]\s*(\d{1,2})\s*[.\-\/월]\s*(\d{1,2})/);if(!m){const k=t.match(/(?<!\d)(\d{2})-(\d{1,2})-(\d{1,2})(?!\d)/);if(k)m=[0,"20"+k[1],k[2],k[3]]}
+  if(!m)return today();const d=new Date(+m[1],+m[2]-1,+m[3]);return !isNaN(d)&&d<=new Date()&&+m[1]>=2020?iso(d):today()}
+function rcStore(lines){const h=lines.find(l=>/상\s*[호흐]/.test(l));let s=h?h.replace(/.*상\s*[호흐]\s*[:;]?/,""):(lines.find(l=>/마트|마드|마켓|농협|다이소|상회|식자|슈퍼|편의|하나로|홈플|코스트|정육|베이커리|빵/.test(l))||"");
+  return s.replace(/[^가-힣A-Za-z0-9 ]/g," ").replace(/\s+/g," ").trim().split(" ").filter(w=>w.length>1).join(" ").slice(0,20)}
+function parseOCR(t){const L=rcNorm(t).split(/\r?\n/).map(x=>x.trim()).filter(Boolean);return{store:rcStore(L),date:rcDate(t),total:rcTotal(L),pay:/현금/.test(t)&&!/카드|신용/.test(t)?"현금":"카드",items:rcDictItems(L)}}
+
+const OCR_BASE=window.AMPM_SALE===true?"ocr/":null;let OCRW=null;
+function loadScript(src){return new Promise((res,rej)=>{const t=document.createElement("script");t.src=src;t.onload=res;t.onerror=rej;document.head.appendChild(t)})}
+async function ocrWorker(onp){if(OCRW)return OCRW;if(!window.Tesseract)await loadScript(OCR_BASE+"tesseract.min.js");const abs=x=>new URL(OCR_BASE+x,location.href).href;
+  OCRW=await Tesseract.createWorker("kor",1,{workerPath:abs("worker.min.js"),corePath:abs("core/"),langPath:abs("lang"),gzip:true,logger:m=>onp&&onp(m)});return OCRW}
+async function shrinkTo(file,max){const img=await createImageBitmap(file);const k=Math.min(1,max/Math.max(img.width,img.height));const c=document.createElement("canvas");c.width=Math.round(img.width*k);c.height=Math.round(img.height*k);c.getContext("2d").drawImage(img,0,0,c.width,c.height);return await new Promise(r=>c.toBlob(r,"image/jpeg",.9))}
+async function rcLocalPhoto(file){V.rc.busy=true;rcMsg("영수증 글자를 읽는 중… (처음 한 번은 인식 데이터를 받느라 조금 더 걸려요)");renderAll();
+  try{const w=await ocrWorker(m=>{if(m&&m.status==="recognizing text")rcMsg(`글자 읽는 중… ${Math.round((m.progress||0)*100)}%`);else if(m&&/load|initializ/.test(m.status||""))rcMsg("인식 준비 중… "+Math.round((m.progress||0)*100)+"%")});
+    const blob=await shrinkTo(file,2000);const res=await w.recognize(blob);const text=(res&&res.data&&res.data.text)||"";
+    const r=parseOCR(text);r.cat=V.rc.cat;V.rc.text=text;V.rc.parsed=Object.assign(V.rc.parsed||{},r);
+    V.rc.msg=r.total?"읽은 내용을 확인하세요. 빠진 품목은 위 글자 칸에서 확인할 수 있어요":"합계를 못 읽었어요. 금액을 직접 넣어주세요"}
+  catch(e){V.rc.msg="사진을 읽지 못했어요. 밝은 곳에서 영수증을 평평하게 다시 찍어주세요"}
+  V.rc.busy=false;renderAll()}
 async function rcPhoto(file){
+  if(OCR_BASE)return rcLocalPhoto(file);
   const sm=await rcSample();if(!sm){rcMsg("사진 읽기는 Claude와 연동한 화면에서만 쓸 수 있어요");return}
   V.rc.busy=true;rcMsg("영수증을 읽는 중… (10~20초)");renderAll();
   try{const blob=await shrink(file);
@@ -1193,7 +1228,7 @@ function rReceipt(){
   const rc=V.rc;if(!rc||!rc.open)return "";const p=rc.parsed;
   return `<div class="overlay" data-act="rc-bg"><div class="dlg" role="dialog" aria-modal="true" aria-labelledby="rc-t">
   <div class="row spread"><h3 id="rc-t">🧾 영수증으로 입력</h3><button class="x" data-act="rc-close" aria-label="닫기">×</button></div>
-  ${rc.cam?`<div class="exrow" style="grid-template-columns:minmax(0,1fr) auto"><span><b>📷 사진으로 읽기</b> <span class="per">Claude가 읽어줘요</span></span><span class="row" style="gap:6px">${rc.busy?`<span class="btn sm pri">읽는 중…</span>`:`<label class="btn sm pri" for="rc-cam" style="cursor:pointer">📷 찍기</label><label class="btn sm" for="rc-file" style="cursor:pointer">🖼️ 앨범에서</label>`}</span><input type="file" id="rc-cam" accept="image/*" capture="environment" hidden><input type="file" id="rc-file" accept="image/*" hidden></div>`:""}
+  ${rc.cam?`<div class="exrow" style="grid-template-columns:minmax(0,1fr) auto"><span><b>📷 사진으로 읽기</b> <span class="per">${OCR_BASE?"찍으면 금액·날짜·품목을 채워줘요":"Claude가 읽어줘요"}</span></span><span class="row" style="gap:6px">${rc.busy?`<span class="btn sm pri">읽는 중…</span>`:`<label class="btn sm pri" for="rc-cam" style="cursor:pointer">📷 찍기</label><label class="btn sm" for="rc-file" style="cursor:pointer">🖼️ 앨범에서</label>`}</span><input type="file" id="rc-cam" accept="image/*" capture="environment" hidden><input type="file" id="rc-file" accept="image/*" hidden></div>`:""}
   <details class="rcpaste" ${rc.cam&&!rc.text?"":"open"}><summary><b>✂️ 영수증 글자 붙여넣기</b> <span class="per">무료 · 폰 글자 인식 사용</span></summary>
    <div class="small muted rc-help">아이폰: 카메라·사진에서 영수증을 비추고 오른쪽 아래 <b>텍스트 인식 버튼</b> → 모두 선택 → 복사<br>갤럭시: 사진 앱에서 영수증 사진의 <b>T(텍스트 추출)</b> 버튼 → 모두 선택 → 복사</div>
    <textarea class="field" id="rc-text" placeholder="여기에 붙여넣으세요">${esc(rc.text||"")}</textarea>
@@ -1209,7 +1244,7 @@ function rReceipt(){
   <div class="exstat" id="rc-msg">${esc(rc.msg||"")}</div>
   </div></div>`;
 }
-async function rcOpen(cat){V.rc={open:true,text:"",parsed:null,msg:"",busy:false,cam:false,camSt:"wait",cat:cat||"장보기"};renderAll();const c=await rcCheck();if(V.rc&&V.rc.open){V.rc.cam=c.st==="ok";V.rc.camSt=c.st;V.rc.camWhy=c.why;renderAll()}}
+async function rcOpen(cat){V.rc={open:true,text:"",parsed:null,msg:"",busy:false,cam:!!OCR_BASE,camSt:OCR_BASE?"ok":"wait",cat:cat||"장보기"};renderAll();if(OCR_BASE)return;const c=await rcCheck();if(V.rc&&V.rc.open){V.rc.cam=c.st==="ok";V.rc.camSt=c.st;V.rc.camWhy=c.why;renderAll()}}
 function rcSync(){const p=V.rc&&V.rc.parsed;if(!p)return;const g=id=>document.getElementById(id);if(g("rc-store"))p.store=g("rc-store").value;if(g("rc-total"))p.total=+g("rc-total").value.replace(/[^\d]/g,"")||0;if(g("rc-date"))p.date=g("rc-date").value;if(g("rc-pay"))p.pay=g("rc-pay").value}
 document.addEventListener("input",e=>{const t=e.target;if(t.id==="rc-text"&&V.rc)V.rc.text=t.value;if(t.id==="rc-total"){const n=t.value.replace(/[^\d]/g,"");t.value=n?(+n).toLocaleString("ko-KR"):""}});
 document.addEventListener("change",e=>{const t=e.target;if((t.id==="rc-file"||t.id==="rc-cam")&&t.files&&t.files[0]){rcSync();rcPhoto(t.files[0]);t.value="";return}if(t.dataset&&t.dataset.rci!=null&&V.rc&&V.rc.parsed){V.rc.parsed.items[+t.dataset.rci].on=t.checked}});
