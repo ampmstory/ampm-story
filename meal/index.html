@@ -1203,13 +1203,17 @@ const OCR_BASE=window.AMPM_SALE===true?"ocr/":null;let OCRW=null;
 function loadScript(src){return new Promise((res,rej)=>{const t=document.createElement("script");t.src=src;t.onload=res;t.onerror=rej;document.head.appendChild(t)})}
 async function ocrWorker(onp){if(OCRW)return OCRW;if(!window.Tesseract)await loadScript(OCR_BASE+"tesseract.min.js");const abs=x=>new URL(OCR_BASE+x,location.href).href;
   OCRW=await Tesseract.createWorker("kor",1,{workerPath:abs("worker.min.js"),corePath:abs("core/"),langPath:abs("lang"),gzip:true,logger:m=>onp&&onp(m)});return OCRW}
-async function shrinkTo(file,max){const img=await createImageBitmap(file);const k=Math.min(1,max/Math.max(img.width,img.height));const c=document.createElement("canvas");c.width=Math.round(img.width*k);c.height=Math.round(img.height*k);c.getContext("2d").drawImage(img,0,0,c.width,c.height);return await new Promise(r=>c.toBlob(r,"image/jpeg",.9))}
+async function decodeImg(file){try{return await createImageBitmap(file)}catch(e){}
+  return await new Promise((res,rej)=>{const u=URL.createObjectURL(file),im=new Image();im.onload=()=>{res(im)};im.onerror=()=>{URL.revokeObjectURL(u);rej(new Error("img-decode"))};im.src=u})}
+async function shrinkTo(file,max){const img=await decodeImg(file);const k=Math.min(1,max/Math.max(img.width,img.height));const c=document.createElement("canvas");c.width=Math.round(img.width*k);c.height=Math.round(img.height*k);c.getContext("2d").drawImage(img,0,0,c.width,c.height);return await new Promise(r=>c.toBlob(r,"image/jpeg",.9))}
 async function rcLocalPhoto(file){V.rc.busy=true;rcMsg("영수증 글자를 읽는 중… (처음 한 번은 인식 데이터를 받느라 조금 더 걸려요)");renderAll();
+  let stage="준비";
   try{const w=await ocrWorker(m=>{if(m&&m.status==="recognizing text")rcMsg(`글자 읽는 중… ${Math.round((m.progress||0)*100)}%`);else if(m&&/load|initializ/.test(m.status||""))rcMsg("인식 준비 중… "+Math.round((m.progress||0)*100)+"%")});
-    const blob=await shrinkTo(file,2000);const res=await w.recognize(blob);const text=(res&&res.data&&res.data.text)||"";
+    stage="사진 열기";const blob=await shrinkTo(file,2000);if(!blob)throw new Error("no-blob");stage="읽기";const res=await w.recognize(blob);const text=(res&&res.data&&res.data.text)||"";
     const r=parseOCR(text);r.cat=V.rc.cat;V.rc.text=text;V.rc.parsed=Object.assign(V.rc.parsed||{},r);
     V.rc.msg=r.total?"읽은 내용을 확인하세요. 빠진 품목은 위 글자 칸에서 확인할 수 있어요":"합계를 못 읽었어요. 금액을 직접 넣어주세요"}
-  catch(e){V.rc.msg="사진을 읽지 못했어요. 밝은 곳에서 영수증을 평평하게 다시 찍어주세요"}
+  catch(e){OCRW=stage==="준비"?null:OCRW;const why=String(e&&(e.message||e)).slice(0,80);
+    V.rc.msg=stage==="준비"?`글자 인식 준비에 실패했어요. 인터넷 연결을 확인하고 다시 해주세요. (${why})`:stage==="사진 열기"?`이 사진 형식을 열 수 없어요. 스크린샷이나 JPG 사진으로 다시 해주세요. (${why})`:`사진을 읽지 못했어요. 밝은 곳에서 영수증을 평평하게 다시 찍어주세요. (${why})`}
   V.rc.busy=false;renderAll()}
 async function rcPhoto(file){
   if(OCR_BASE)return rcLocalPhoto(file);
