@@ -427,6 +427,7 @@ body.onb .gear,body.onb .exbtn{display:none}
 
 <script>
 /* ---------- constants ---------- */
+const SALE=window.AMPM_SALE===true;
 const TABS=[["today","오늘"],["meals","식단"],["shop","장보기"],["fridge","냉장고"],["recipes","Best레시피"],["money","가계부"]];
 const TAB_ALIAS={spend:"money",report:"money"};
 const ZONES=["냉장","냉동","실온"], ZONE_C={냉장:"lime",냉동:"sky",실온:"yellow"};
@@ -484,6 +485,7 @@ async function flush(){if(!col){dirty.clear();return}if(busy){saveT=setTimeout(f
   for(const k of ks){try{await col.doc(k).set({v:S[k],t:Date.now()})}catch(e){setStore(false)}}busy=false}
 function setStore(cloud){const el=$("#store");el.classList.toggle("cloud",cloud);el.lastElementChild.textContent=cloud?"계정에 저장 · 기기 연동":"이 기기에만 저장";
   const m=$("#sync-msg");const inClaude=!!(window.claude&&typeof window.claude.use==="function");
+  if(m&&!cloud&&SALE){m.innerHTML=`내 기록은 <b>이 기기(브라우저)에만</b> 저장되고, 판매자에게 보내지지 않아요.<br>다른 기기로 옮길 땐 아래 <b>파일로 저장</b> → 새 기기에서 <b>파일 불러오기</b>를 눌러주세요.`;return}
   if(m&&!cloud&&!inClaude){m.innerHTML=`지금은 <b>이 기기(브라우저)에만</b> 저장돼요. <b>Claude와 연동</b>하면 폰·패드·PC 기록이 자동으로 맞춰지고, 영수증 사진 읽기도 쓸 수 있어요. (무료 계정도 돼요)<br><a class="btn sm pri" style="display:inline-block;margin-top:6px;text-decoration:none" href="${APP_URL}" target="_blank" rel="noopener">Claude와 연동하기</a> <span class="small muted">기존 기록은 '파일로 저장' → 연동한 화면에서 '파일 불러오기'</span>`;return}
   if(m)m.innerHTML=cloud?"claude.ai 계정에 저장되고 있어요. 같은 계정으로 열면 폰·패드·PC 어디서든 기록이 그대로 이어져요.":"지금은 <b>이 기기(브라우저)에만</b> 저장돼요. claude.ai에 로그인해서 열면 기기끼리 자동으로 맞춰져요. 로그인 없이 쓸 때는 <b>파일로 저장</b> → 다른 기기에서 <b>파일 불러오기</b>로 옮기세요."}
 async function connectDB(){
@@ -1019,7 +1021,7 @@ function rOnboard(){
    <p>앱에서 간편하게 입력하고, 굿노트 플래너에는 <b>PDF로 바로 넣거나 손글씨로 옮겨 쓰세요.</b><br>처음 세팅은 1~2분이면 끝나요.</p>
    <button class="btn pri big" data-act="ob-go" data-v="1">바로 시작하기</button>
    <button class="btn" data-act="ob-sample">예시로 먼저 둘러보기</button>
-   <p class="small muted">Claude 계정으로 로그인한 상태면 다른 기기에서도 이어서 쓸 수 있어요.</p></section>`;
+   <p class="small muted">${SALE?"내 기록은 이 기기에만 저장되고, 판매자에게 보내지지 않아요.":"Claude 계정으로 로그인한 상태면 다른 기기에서도 이어서 쓸 수 있어요."}</p></section>`;
   if(V.ob===1)return `<div class="stack obstep"><h2 class="sec">우리집을 알려주세요</h2><p class="small muted">메뉴 추천에 쓰여요. 잘못 눌렀으면 한 번 더 누르면 해제돼요. 나중에 오른쪽 위 ⚙️ 설정에서도 바꿀 수 있어요.</p>
    <section class="box"><div class="cap c-lime">몇 명이 먹나요?</div><div class="in chips">${[1,2,3,4,5].map(n=>`<button class="chip big" aria-pressed="${(P.people||2)===n}" data-act="ob-people" data-v="${n}">${n}${n===5?"명+":"명"}</button>`).join("")}<button class="chip big" aria-pressed="${!!P.kids}" data-act="ob-kids">👶 아이 있음</button></div></section>
    <section class="box"><div class="cap c-pink">못 먹는 것 · 알레르기</div><div class="in"><div class="chips">${OB_AVOID.map(w=>`<button class="chip" aria-pressed="${csvHas(P.avoid,w)}" data-act="ob-avoid" data-v="${w}">${w}</button>`).join("")}</div><input class="field" style="width:100%;margin-top:8px" data-pref="avoid" value="${esc(P.avoid)}" placeholder="직접 쓰기 (쉼표로)"></div></section>
@@ -1044,7 +1046,7 @@ function rOnboard(){
      <div class="small">냉장고: ${x.have.map(c=>`<span class="tag">${esc(c)}</span>`).join("")}</div>${x.need.length?`<div class="small">살 것: ${x.need.map(c=>`<span class="tag hot">${esc(c)}</span>`).join("")}</div>`:`<div class="small" style="color:var(--good)">✓ 지금 재료로 바로 만들 수 있어요</div>`}
      <div class="row" style="gap:6px"><select class="field small" id="ob-slot-${i}" aria-label="넣을 칸">${opts.map(o=>`<option value="${o.v}" ${o.v===def?"selected":""}>${esc(o.l)}</option>`).join("")}</select><button class="btn sm pri" data-act="ob-meal" data-v="${i}">식단에 넣기</button></div></div></section>`).join("")
      :`<div class="empty">냉장고 재료가 들어간 기본 레시피가 없어요. 이전 단계에서 재료를 더 눌러보세요.</div>`}
-   <button class="btn rcbtn" data-act="ai-open" data-v="rec">✨ Claude에게 새 메뉴 추천받기 <span class="small muted">(연동 시)</span></button>
+   <button class="btn rcbtn" data-act="ai-open" data-v="rec">${SALE?"🍳 냉장고 재료로 다른 메뉴 더 보기":"✨ Claude에게 새 메뉴 추천받기 <span class=\"small muted\">(연동 시)</span>"}</button>
    ${obNav(5,planned?`식단 ${planned}칸 · 다음 ›`:"건너뛰고 다음 ›")}</div>`}
   const fr=S.fridge.length,pl=Object.values(S.meals).reduce((a,x)=>a+["b","l","d"].filter(k=>x[k]).length,0),sh=S.shop.filter(x=>!x.done).length,b=S.budget[m]||0;
   return `<div class="stack obstep"><h2 class="sec">세팅 끝! 굿노트 플래너에 어떻게 옮길까요?</h2>
@@ -1141,7 +1143,7 @@ function rPicker(){
    ${cur?`<div class="row spread small"><span>지금: <b>${esc(cur)}</b></span><button class="btn sm warn" data-act="pk-clear">비우기</button></div>`:""}
    <input class="field" id="pk-q" placeholder="메뉴 찾기 또는 직접 쓰기" autocomplete="off">
    <button class="btn sm" data-act="pk-own" id="pk-own" hidden></button>
-   <div class="pklist">${thList.length?`<div class="pksec"><div class="small"><b>이번 주 컨셉에 맞는 메뉴</b> <span class="muted">${esc(themeText(P.d))}</span></div><div class="chips">${thList.map(r=>`<button class="chip th" data-act="pk-pick" data-v="${esc(r.name)}" data-n="${esc(r.name)}">${esc(r.name)}</button>`).join("")}</div></div>`:th.tags.length?`<div class="small muted">이번 주 컨셉(${esc(themeText(P.d))})에 맞는 레시피가 없어요. 아래에서 고르거나 Claude 식단 짜기를 써보세요.</div>`:""}${sec("★ 먼저 먹을 재료로",rec,"rec")}${sec("Best레시피",mine)}${sec("기본 레시피",base)}</div>
+   <div class="pklist">${thList.length?`<div class="pksec"><div class="small"><b>이번 주 컨셉에 맞는 메뉴</b> <span class="muted">${esc(themeText(P.d))}</span></div><div class="chips">${thList.map(r=>`<button class="chip th" data-act="pk-pick" data-v="${esc(r.name)}" data-n="${esc(r.name)}">${esc(r.name)}</button>`).join("")}</div></div>`:th.tags.length?`<div class="small muted">이번 주 컨셉(${esc(themeText(P.d))})에 맞는 레시피가 없어요. 아래에서 고르거나 '이번 주 식단 짜줘'를 써보세요.</div>`:""}${sec("★ 먼저 먹을 재료로",rec,"rec")}${sec("Best레시피",mine)}${sec("기본 레시피",base)}</div>
   </div></div>`;
 }
 function pkSet(v){const P=V.pk;S.meals[P.d]=S.meals[P.d]||{};S.meals[P.d][P.k]=v;save("meals");
